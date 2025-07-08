@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, Sparkles, Heart } from "lucide-react"
-import { DuckCharacter } from "@/components/duck-character"
-import { ResultImageGenerator } from "@/components/result-image-generator"
+import { Button } from "@/components/ui/button"
+import { ResultPage } from "@/components/result-page"
+import { ChevronLeft } from "lucide-react"
 
 // Duck personality types data (same as before)
 const duckTypes = {
@@ -44,7 +42,7 @@ const duckTypes = {
     name: "비오리",
     tags: ["감성적", "섬세함"],
     description:
-      "비오리는 감정의 온도계 같은 존재입니다. 상대방의 기분이 조금만 안 좋아도 바로 알아채고 '괜찮아? 무슨 일 있어?'라고 물어보죠. 친구가 힘들어하면 밤새 전화를 받아주고, 기뻐하면 함께 기뻐해주는 천사 같은 존재예요. 하지만 남의 감정에 너무 몰입하다 보니 정작 자신의 감정은 뒷전이 되기 일쑤입니다. 슬픈 영화를 보면 엔딩크레딧까지 울고, 친구의 연애 상담을 들어주다가 본인이 더 상처받는 타입이에요. '나는 괜찮아'가 입버릇이지만 사실은 가장 위로가 필요한 사람이랍니다.",
+      "비오리는 감정의 온도계 같은 존재입니다. 상대방의 기분이 조금만 안 좋아도 바로 알아채고 '괜찮아? 무슨 일 있어?'라고 물어보죠. 친구가 힘들어하면 밤새 전화를 받아주고, 기뻐하면 함께 기뻐해주는 천사 같은 존재예요. 하지만 루틴한 일상이 계속되면 답답해서 못 견디고, 갑자기 머리를 자르거나 새로운 취미를 시작하죠. 친구들은 발구지와 함께 있으면 '인생이 드라마틱해진다'고 말하지만, 가끔은 '좀 진정해...'라고 말리기도 해요.",
     strengths: ["공감력", "배려심", "섬세함", "경청", "조율능력"],
     weaknesses: ["감정 기복", "우울감", "자기희생", "소심함", "스트레스에 취약"],
     compatible: ["청둥오리", "점무늬오리"],
@@ -84,7 +82,7 @@ const duckTypes = {
     name: "쇠오리",
     tags: ["열정적", "리더형"],
     description:
-      "쇠오리는 타고난 리더로, '하면 된다!'를 외치며 앞장서는 추진력의 화신입니다. 목표를 정하면 반드시 달성하려고 하고, 팀 프로젝트에서는 자연스럽게 리더 역할을 맡아요. '포기'라는 단어는 사전에 없고, 어려움이 닥쳐도 '이것도 극복할 수 있어!'라며 긍정적으로 생각하죠. 하지만 가끔 너무 성급하게 밀어붙여서 팀원들이 부담스러워하기도 해요. '왜 이렇게 안 되지?'라며 답답해하지만, 결국엔 모든 걸 해내는 대단한 실행력을 가지고 있습니다.",
+      "쇠오리는 타고난 리더로, '하면 된다!'를 외치며 앞장서는 추진력의 화신입니다. 목표를 정하면 반드시 달성하려고 하고, 팀 프로젝트에서는 자연스럽게 리더 역할을 맡아요. '포기'라는 단어는 사전에 없고, 어려움이 닥쳐도 '것도 극복할 수 있어!'라며 긍정적으로 생각하죠. 하지만 가끔 너무 성급하게 밀어붙여서 팀원들이 부담스러워하기도 해요. '왜 이렇게 안 되지?'라며 답답해하지만, 결국엔 모든 걸 해내는 대단한 실행력을 가지고 있습니다.",
     strengths: ["추진력", "결단력", "리더십", "책임감", "목표지향"],
     weaknesses: ["배려 부족", "완고함", "독선", "감정 조절 부족", "협력 부족"],
     compatible: ["가창오리", "점무늬오리"],
@@ -94,7 +92,7 @@ const duckTypes = {
     name: "청둥오리",
     tags: ["유연함", "적응력"],
     description:
-      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해요. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 의견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 있으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
+      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 의견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 있으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
     strengths: ["적응력", "유연성", "회복력", "대인관계능력", "낙천성"],
     weaknesses: ["우유부단함", "집중력 부족", "반복에 취약", "산만함", "책임 회피"],
     compatible: ["점무늬오리", "홍머리오리"],
@@ -164,7 +162,7 @@ const duckTypes = {
     name: "흰등오리",
     tags: ["중립", "안정형"],
     description:
-      "흰등오리는 감정의 파도가 잔잔한 호수 같은 존재로, 언제나 차분하고 안정적인 모습을 보여줍니다. 친구들이 흥분해서 떠들어도 '그래, 그래'라며 조용히 듣고, 갈등 상황에서도 중립을 지키려고 노력해요. 감정 기복이 거의 없어서 주변 사람들에게 안정감을 주지만, 가끔은 '네 진짜 감정은 뭐야?'라는 질문을 받기도 하죠. 자신의 의견을 강하게 표현하는 걸 어려워하지만, 조용히 모든 걸 지켜보며 필요할 때 현명한 조언을 해주는 든든한 존재예요.",
+      "흰등오리는 감정의 파도가 잔잔한 호수 같은 존재로, 언제나 차분하고 안정적인 모습을 보여줍니다. 친구들이 흥분해서 떠들어도 '그래, 그래'라며 조용히 듣고, 갈등 상황에서도 중립을 지키려고 노력해요. 감정 기폭이 거의 없어서 주변 사람들에게 안정감을 주지만, 가끔은 '네 진짜 감정은 뭐야?'라는 질문을 받기도 하죠. 자신의 의견을 강하게 표현하는 걸 어려워하지만, 조용히 모든 걸 지켜보며 필요할 때 현명한 조언을 해주는 든든한 존재예요.",
     strengths: ["안정감", "일관성", "신뢰성", "차분함", "문제해결능력"],
     weaknesses: ["소극성", "표현 부족", "결단력 부족", "리더십 부족", "자기주장 부족"],
     compatible: ["황오리", "점무늬오리"],
@@ -223,20 +221,19 @@ const duckImages: { [key: string]: string } = {
   쇠오리: "/images/ducks/쇠오리.png",
   청둥오리: "/images/ducks/청둥오리.png",
   청머리오리: "/images/ducks/청머리오리.png",
-  // Add default image for types without illustrations
-  홍머리오리: "/images/ducks/청둥오리.png",
-  알락오리: "/images/ducks/고방오리.png",
-  점무늬오리: "/images/ducks/비오리.png",
-  혹부리오리: "/images/ducks/쇠오리.png",
-  황오리: "/images/ducks/발구지.png",
-  흰등오리: "/images/ducks/청둥오리.png",
-  흰뺨검둥오리: "/images/ducks/비오리.png",
-  흰뺨오리: "/images/ducks/청머리오리.png",
-  흰죽지: "/images/ducks/바다비오리.png",
-  넓적부리: "/images/ducks/청둥오리.png",
+  홍머리오리: "/images/ducks/홍머리오리.png",
+  알락오리: "/images/ducks/알락오리.png",
+  점무늬오리: "/images/ducks/점무늬오리.png",
+  혹부리오리: "/images/ducks/혹부리오리.png",
+  황오리: "/images/ducks/황오리.png",
+  흰등오리: "/images/ducks/흰등오리.png",
+  흰뺨검둥오리: "/images/ducks/흰뺨검둥오리.png",
+  흰뺨오리: "/images/ducks/흰뺨오리.png",
+  흰죽지: "/images/ducks/흰죽지.png",
+  넓적부리: "/images/ducks/넓적부리.png",
 }
 
-// Questions data (same as before)
+// Updated Questions data - 20개 새로운 문항
 const questions = [
   {
     id: 1,
@@ -315,7 +312,7 @@ const questions = [
       { text: "솔직하게 말한다.", type: "홍머리오리" },
       { text: "적당히 돌려서 말한다.", type: "청둥오리" },
       { text: "감추고 속으로 삭인다.", type: "가창오리" },
-      { text: "감정을 글로 적거나 메모한다.", type: "알락오리" },
+      { text: "표현한 감정을 글로 적거나 메모한다.", type: "알락오리" },
     ],
   },
   {
@@ -403,9 +400,9 @@ const questions = [
     question: "내 감정의 기복은?",
     options: [
       { text: "거의 일정하다.", type: "흰등오리" },
-      { text: "작은 일에도 오르내린다.", type: "호사비오리" },
+      { text: "작은 일에도 오르내린다.", type: "비오리" },
       { text: "평소엔 안정적이지만 한 번 기복이 오면 크다.", type: "홍머리오리" },
-      { text: "스스로도 모르겠다.", type: "청둥오리" },
+      { text: "스스로도 모르겠다.", type: "청머리오리" },
     ],
   },
   {
@@ -413,19 +410,19 @@ const questions = [
     question: "하루가 예상과 달랐을 때 나는?",
     options: [
       { text: "그냥 적응한다.", type: "청둥오리" },
-      { text: "계속 불만이 남는다.", type: "알락오리" },
-      { text: "스트레스가 쌓여 감정이 폭발한다.", type: "홍머리오리" },
-      { text: "내 계획이 틀어졌다고 자책한다.", type: "고방오리" },
+      { text: "계속 불만이 남는다.", type: "고방오리" },
+      { text: "스트레스가 쌓여 감정이 폭발한다.", type: "쇠오리" },
+      { text: "내 계획이 틀어졌다고 자책한다.", type: "알락오리" },
     ],
   },
   {
     id: 19,
     question: "좋아하는 사람이 연락이 없으면 나는?",
     options: [
-      { text: "바쁜가 보다 하고 넘긴다.", type: "흰등오리" },
-      { text: "계속 확인하며 신경 쓴다.", type: "비오리" },
+      { text: "바쁜가 보다 하고 넘긴다.", type: "흰죽지" },
+      { text: "계속 확인하며 신경 쓴다.", type: "원앙" },
       { text: "먼저 연락할까 고민만 한다.", type: "가창오리" },
-      { text: "마음이 불안해 다른 일에 집중이 안 된다.", type: "호사비오리" },
+      { text: "마음이 불안해 다른 일에 집중이 안 된다.", type: "비오리" },
     ],
   },
   {
@@ -433,19 +430,22 @@ const questions = [
     question: "기분이 좋지 않은 날 나는?",
     options: [
       { text: "이유를 곱씹으며 원인을 찾는다.", type: "알락오리" },
-      { text: "기분 전환하려 억지로 활동한다.", type: "쇠오리" },
+      { text: "기분 전환하려 억지로 활동한다.", type: "발구지" },
       { text: "그저 누워서 아무것도 하지 않는다.", type: "넓적부리" },
       { text: "감정이 나아질 때까지 스스로를 격려한다.", type: "혹부리오리" },
     ],
   },
 ]
 
-const Page = () => {
-  const [currentPage, setCurrentPage] = useState("cover")
+export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<string[]>([])
-  const [result, setResult] = useState<string | null>(null)
+  const [showResult, setShowResult] = useState(false)
+  const [testStarted, setTestStarted] = useState(false)
   const [showAllTypes, setShowAllTypes] = useState(false)
+  const [username, setUsername] = useState("")
+  const [showNicknameInput, setShowNicknameInput] = useState(false)
+  const [selectedDuckDetail, setSelectedDuckDetail] = useState<string | null>(null)
 
   const handleAnswer = (answerType: string) => {
     const newAnswers = [...answers, answerType]
@@ -455,368 +455,309 @@ const Page = () => {
       setCurrentQuestion(currentQuestion + 1)
     } else {
       // Calculate result
-      const typeCount: { [key: string]: number } = {}
+      const typeCounts: { [key: string]: number } = {}
       newAnswers.forEach((answer) => {
-        typeCount[answer] = (typeCount[answer] || 0) + 1
+        typeCounts[answer] = (typeCounts[answer] || 0) + 1
       })
 
-      const resultType = Object.keys(typeCount).reduce((a, b) => (typeCount[a] > typeCount[b] ? a : b))
+      const resultType = Object.keys(typeCounts).reduce((a, b) => (typeCounts[a] > typeCounts[b] ? a : b))
 
-      setResult(resultType)
-      setCurrentPage("result")
+      setShowResult(true)
     }
   }
 
-  const resetTest = () => {
-    setCurrentPage("cover")
+  const handleRestart = () => {
     setCurrentQuestion(0)
     setAnswers([])
-    setResult(null)
+    setShowResult(false)
+    setTestStarted(false)
+    setShowAllTypes(false)
   }
 
-  const goBack = () => {
+  const handleStartTest = () => {
+    setShowNicknameInput(true)
+  }
+
+  const handleNicknameSubmit = () => {
+    if (username.trim()) {
+      setTestStarted(true)
+      setShowNicknameInput(false)
+    }
+  }
+
+  const handleViewAllTypes = () => {
+    setShowAllTypes(true)
+  }
+
+  const handleGoBack = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1)
       setAnswers(answers.slice(0, -1))
     } else {
-      setCurrentPage("cover")
+      setTestStarted(false)
     }
   }
 
-  if (currentPage === "cover") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#E8F5E8] via-[#D4E8D4] to-[#C0DBC0] flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-10 left-10 opacity-20">
-          <Sparkles className="w-8 h-8 text-[#779966] floating-animation" />
-        </div>
-        <div className="absolute top-20 right-20 opacity-20">
-          <Heart className="w-6 h-6 text-[#779966] bounce-animation" />
-        </div>
-        <div className="absolute bottom-20 left-20 opacity-20">
-          <Sparkles className="w-10 h-10 text-[#779966] pulse-animation" />
-        </div>
+  const getResult = () => {
+    const typeCounts: { [key: string]: number } = {}
+    answers.forEach((answer) => {
+      typeCounts[answer] = (typeCounts[answer] || 0) + 1
+    })
 
-        <Card className="w-full max-w-md mx-auto text-center bg-white/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardContent className="p-8">
-            <div className="mb-8">
-              <div className="mb-6">
-                <DuckCharacter size="xl" color="#779966" expression="excited" animation="bounce" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-3">내 안의 꽥꽥꽥이</h1>
-              <p className="text-xl text-[#779966] font-bold mb-6">오리로 알아보는 나의 멘탈 방어 유형</p>
-              <div className="bg-[#779966]/10 rounded-2xl p-4 mb-6">
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  🦆 20개의 질문을 통해
-                  <br />
-                  당신의 성격과 가장 닮은 오리 유형을 찾아보세요!
-                  <br />각 상황에서 가장 자연스럽게 떠오르는 반응을
-                  <br />
-                  선택해주세요.
-                </p>
-              </div>
-            </div>
-            <Button
-              onClick={() => setCurrentPage("test")}
-              className="w-full bg-[#779966] hover:bg-[#668855] text-white py-4 text-lg rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 pulse-animation"
-            >
-              ✨ 테스트 시작하기 ✨
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    const resultType = Object.keys(typeCounts).reduce((a, b) => (typeCounts[a] > typeCounts[b] ? a : b))
+
+    return duckTypes[resultType as keyof typeof duckTypes]
   }
 
-  if (currentPage === "test") {
-    const progress = ((currentQuestion + 1) / questions.length) * 100
-    const question = questions[currentQuestion]
+  const handleDuckClick = (duckName: string) => {
+    setSelectedDuckDetail(duckName)
+  }
 
+  const handleBackToAllTypes = () => {
+    setSelectedDuckDetail(null)
+  }
+
+  // Show individual duck detail
+  if (selectedDuckDetail) {
+    const duck = duckTypes[selectedDuckDetail as keyof typeof duckTypes]
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#E8F5E8] via-[#D4E8D4] to-[#C0DBC0] p-4">
-        <div className="max-w-md mx-auto">
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <Button variant="ghost" size="sm" onClick={goBack} className="text-gray-600 hover:text-[#779966]">
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                이전
-              </Button>
-              <span className="text-sm text-gray-600 font-semibold">
-                {currentQuestion + 1} / {questions.length}
-              </span>
-            </div>
-            <Progress value={progress} className="h-3 bg-white/50" />
+      <div className="min-h-screen px-4 py-6" style={{ backgroundColor: "#749665" }}>
+        <div className="max-w-sm mx-auto">
+          <div className="mb-4">
+            <Button onClick={handleBackToAllTypes} className="bg-white/30 hover:bg-white/50 text-white">
+              ← 모든 유형으로 돌아가기
+            </Button>
           </div>
-
-          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="text-center mb-8">
-                <div className="mb-4">
-                  <DuckCharacter size="lg" color="#779966" expression="thinking" animation="wiggle" />
-                </div>
-                <h2 className="text-lg font-bold text-gray-800 mb-4 leading-relaxed">{question.question}</h2>
-              </div>
-
-              <div className="space-y-3">
-                {question.options.map((option, index) => (
-                  <Button
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+            <div className="text-center mb-4">
+              <img
+                src={duckImages[duck.name] || "/placeholder.svg"}
+                alt={duck.name}
+                className="w-32 h-32 mx-auto mb-4"
+              />
+              <h1 className="text-3xl font-bold text-gray-800 mb-3">{duck.name}</h1>
+              <div className="flex justify-center gap-2 mb-4">
+                {duck.tags.map((tag, index) => (
+                  <span
                     key={index}
-                    variant="outline"
-                    className="w-full text-left justify-start h-auto p-4 text-wrap bg-white/80 hover:bg-[#779966]/10 hover:border-[#779966] border-2 border-gray-200 rounded-2xl transition-all duration-300 hover:shadow-md"
-                    onClick={() => handleAnswer(option.type)}
+                    className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border-black border"
                   >
-                    <span className="text-sm leading-relaxed font-medium">{option.text}</span>
-                  </Button>
+                    #{tag}
+                  </span>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
+            </div>
+            <div className="text-gray-700 text-sm leading-relaxed mb-6">{duck.description}</div>
 
-  if (currentPage === "result" && result) {
-    const duckResult = duckTypes[result as keyof typeof duckTypes]
+            <div className="mb-4">
+              <h3 className="font-bold text-gray-800 mb-2">장점</h3>
+              <div className="flex flex-wrap gap-2">
+                {duck.strengths.map((strength, index) => (
+                  <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                    {strength}
+                  </span>
+                ))}
+              </div>
+            </div>
 
-    if (showAllTypes) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E8F5E8] via-[#D4E8D4] to-[#C0DBC0] p-4">
-          <div className="max-w-4xl mx-auto">
-            <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-2xl font-bold text-gray-800">모든 오리 유형</h1>
-                  <Button
-                    onClick={() => setShowAllTypes(false)}
-                    variant="outline"
-                    className="border-[#779966] text-[#779966] hover:bg-[#779966] hover:text-white"
-                  >
-                    돌아가기
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Object.entries(duckTypes).map(([key, duck]) => (
-                    <div
-                      key={key}
-                      className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="text-center">
-                        <div className="w-20 h-20 mx-auto mb-3 relative">
-                          {duckImages[key] ? (
-                            <img
-                              src={duckImages[key] || "/placeholder.svg"}
-                              alt={duck.name}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <DuckCharacter size="lg" color="#779966" expression="happy" />
-                          )}
-                        </div>
-                        <h3 className="font-bold text-sm text-gray-800 mb-1">{duck.name}</h3>
-                        <div className="flex flex-wrap justify-center gap-1 mb-2">
-                          {duck.tags.map((tag, index) => (
-                            <span key={index} className="px-2 py-1 bg-[#779966] text-white text-xs rounded-full">
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                        <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
-                          {duck.description.substring(0, 60)}...
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mb-4">
+              <h3 className="font-bold text-gray-800 mb-2">주의할 점</h3>
+              <div className="flex flex-wrap gap-2">
+                {duck.weaknesses.map((weakness, index) => (
+                  <span key={index} className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                    {weakness}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      )
-    }
+      </div>
+    )
+  }
 
+  // Show all types view
+  if (showAllTypes) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#E8F5E8] via-[#D4E8D4] to-[#C0DBC0] p-4 relative overflow-hidden">
-        {/* Garden background elements */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-green-300 to-transparent"></div>
-          {/* Flowers */}
-          <div className="absolute bottom-10 left-10 w-8 h-8 bg-pink-400 rounded-full"></div>
-          <div className="absolute bottom-8 left-20 w-6 h-6 bg-yellow-400 rounded-full"></div>
-          <div className="absolute bottom-12 right-16 w-7 h-7 bg-purple-400 rounded-full"></div>
-          <div className="absolute bottom-6 right-32 w-5 h-5 bg-red-400 rounded-full"></div>
-          {/* Grass blades */}
-          <div className="absolute bottom-0 left-1/4 w-1 h-16 bg-green-400 rounded-full transform rotate-12"></div>
-          <div className="absolute bottom-0 left-1/3 w-1 h-20 bg-green-500 rounded-full transform -rotate-6"></div>
-          <div className="absolute bottom-0 right-1/4 w-1 h-18 bg-green-400 rounded-full transform rotate-8"></div>
-          <div className="absolute bottom-0 right-1/3 w-1 h-14 bg-green-500 rounded-full transform -rotate-12"></div>
-        </div>
-
-        <div className="max-w-md mx-auto relative z-10">
-          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
-            <CardContent className="p-6">
-              <div className="text-center mb-8">
-                <div className="mb-6">
-                  {duckImages[result] ? (
-                    <div className="mx-auto bounce-animation w-fit h-fit">
-                      <img
-                        src={duckImages[result] || "/placeholder.svg"}
-                        alt={duckResult.name}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <DuckCharacter size="xl" color="#779966" expression="excited" animation="bounce" />
-                  )}
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">모든 오리 유형</h1>
+            <Button onClick={() => setShowAllTypes(false)} className="bg-[#779966] hover:bg-[#6a8659]">
+              돌아가기
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Object.values(duckTypes).map((duck) => (
+              <div
+                key={duck.name}
+                className="bg-white rounded-lg p-6 shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => handleDuckClick(duck.name)}
+              >
+                <div className="text-center mb-4">
+                  <img
+                    src={duckImages[duck.name] || "/placeholder.svg"}
+                    alt={duck.name}
+                    className="w-16 h-16 mx-auto mb-2"
+                  />
+                  <h3 className="text-xl font-bold text-gray-800">{duck.name}</h3>
+                  <div className="flex justify-center gap-2 mt-2">
+                    {duck.tags.map((tag, index) => (
+                      <span key={index} className="px-2 py-1 rounded-full text-sm text-green-800 bg-green-50">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-4">{duckResult.name}</h1>
-                <div className="flex flex-wrap justify-center gap-2 mb-6">
-                  {duckResult.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-[#779966] text-white text-sm rounded-full font-bold shadow-md"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-sm text-gray-600 line-clamp-3">{duck.description}</p>
               </div>
-
-              <div className="space-y-6">
-                <div className="bg-[#779966]/10 rounded-2xl p-4">
-                  <h3 className="font-bold text-gray-800 mb-3 text-center">🦆 성격 설명</h3>
-                  <p className="text-gray-700 text-sm leading-relaxed text-center">{duckResult.description}</p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-green-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-green-800 mb-3 text-center">✨ 강점</h3>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {duckResult.strengths.map((strength, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-green-200 text-green-800 text-xs rounded-full font-semibold"
-                        >
-                          {strength}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-orange-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-orange-800 mb-3 text-center">🔥 약점</h3>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {duckResult.weaknesses.map((weakness, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-orange-200 text-orange-800 text-xs rounded-full font-semibold"
-                        >
-                          {weakness}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-blue-800 mb-4 text-center">💕 잘 맞는 유형</h3>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      {duckResult.compatible.map((compatible, index) => (
-                        <div key={index} className="text-center">
-                          <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden bg-blue-100 border-blue-300 flex items-center justify-center border-2 border-dotted">
-                            {duckImages[compatible] ? (
-                              <img
-                                src={duckImages[compatible] || "/placeholder.svg"}
-                                alt={compatible}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <DuckCharacter size="sm" color="#3B82F6" expression="happy" />
-                            )}
-                          </div>
-                          <p className="text-blue-800 mb-1 text-sm font-black">{compatible}</p>
-                          <p className="text-xs text-blue-600 leading-tight">
-                            {duckTypes[compatible as keyof typeof duckTypes]?.tags.join(", ")}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="space-y-2">
-                      {duckResult.compatible.map((compatible, index) => (
-                        <div key={index} className="bg-blue-100 rounded-lg p-2">
-                          <p className="text-blue-800 font-semibold text-center text-sm">{compatible}:</p>
-                          <p className="text-xs text-blue-700 leading-relaxed">
-                            {duckTypes[compatible as keyof typeof duckTypes]?.description.substring(0, 100)}...
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-red-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-red-800 mb-4 text-center">💥 안 맞는 유형</h3>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      {duckResult.incompatible.map((incompatible, index) => (
-                        <div key={index} className="text-center">
-                          <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden bg-red-100 border-red-300 flex items-center justify-center border-2 border-dotted">
-                            {duckImages[incompatible] ? (
-                              <img
-                                src={duckImages[incompatible] || "/placeholder.svg"}
-                                alt={incompatible}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <DuckCharacter size="sm" color="#EF4444" expression="thinking" />
-                            )}
-                          </div>
-                          <p className="font-bold text-red-800 mb-1 text-sm">{incompatible}</p>
-                          <p className="text-xs text-red-600 leading-tight">
-                            {duckTypes[incompatible as keyof typeof duckTypes]?.tags.join(", ")}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="space-y-2">
-                      {duckResult.incompatible.map((incompatible, index) => (
-                        <div key={index} className="bg-red-100 rounded-lg p-2">
-                          <p className="text-red-800 font-semibold text-center text-sm">{incompatible}:</p>
-                          <p className="text-xs text-red-700 leading-relaxed">
-                            {duckTypes[incompatible as keyof typeof duckTypes]?.description.substring(0, 100)}...
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 space-y-3">
-                <ResultImageGenerator duckType={duckResult} />
-
-                <Button
-                  onClick={() => setShowAllTypes(true)}
-                  variant="outline"
-                  className="w-full border-2 border-[#779966] text-[#779966] hover:bg-[#779966] hover:text-white py-4 text-lg rounded-full font-bold transition-all duration-300 bg-transparent"
-                >
-                  🦆 모든 유형 보기
-                </Button>
-
-                <Button
-                  onClick={resetTest}
-                  variant="outline"
-                  className="w-full border-2 text-gray-600 hover:bg-gray-400 hover:text-white py-4 rounded-full font-bold transition-all duration-300 bg-transparent text-xs underline border-transparent shadow-none"
-                >
-                  🔄 다시 테스트하기
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
-  return null
-}
+  // Show nickname input
+  if (showNicknameInput) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#E8F5E8] to-[#D4E8D4] px-4 py-8 flex items-center justify-center">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg p-8 shadow-md text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">닉네임을 입력해주세요</h2>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="닉네임을 입력하세요"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-center text-lg mb-6 focus:border-[#779966] focus:outline-none"
+              maxLength={10}
+            />
+            <div className="space-y-3">
+              <Button
+                onClick={handleNicknameSubmit}
+                disabled={!username.trim()}
+                className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-3 text-lg rounded-full font-bold disabled:opacity-50"
+              >
+                테스트 시작하기
+              </Button>
+              <Button
+                onClick={() => setShowNicknameInput(false)}
+                variant="ghost"
+                className="w-full text-gray-600 py-3 text-lg rounded-full font-bold"
+              >
+                돌아가기
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-export default Page
+  // Show question page
+  if (testStarted) {
+    const question = questions[currentQuestion]
+    const progress = ((currentQuestion + 1) / questions.length) * 100
+
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#E8F5E8] to-[#D4E8D4] px-4 py-8">
+        <div className="max-w-md mx-auto">
+          {/* Header with back button */}
+          <div className="mb-8">
+            <div className="flex items-center mb-4">
+              <Button onClick={handleGoBack} variant="ghost" size="sm" className="p-2 hover:bg-[#779966]/20">
+                <ChevronLeft className="w-6 h-6 text-[#779966]" />
+              </Button>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+
+          {/* Question */}
+          <div className="bg-white rounded-lg p-6 shadow-md mb-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">{question.question}</h2>
+
+            <div className="space-y-3">
+              {question.options.map((option, index) => (
+                <Button
+                  key={index}
+                  onClick={() => handleAnswer(option.type)}
+                  variant="outline"
+                  className="w-full text-left justify-start h-auto py-4 px-4 border-2 border-gray-200 hover:border-[#779966] hover:bg-[#779966]/10 text-gray-700 hover:text-gray-800"
+                >
+                  {option.text}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show result page
+  if (showResult) {
+    return <ResultPage duckType={getResult()} onRestart={handleRestart} onViewAllTypes={handleViewAllTypes} />
+  }
+
+  // Show cover page
+  return (
+    <div
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: "url('/images/background.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      <div className="flex flex-col items-center justify-start min-h-screen px-4 py-8">
+        {/* Header */}
+        <div className="max-w-md mb-0 h-auto w-[63%]"></div>
+
+        {/* Title Section */}
+        <div className="flex items-center justify-center mb-1">
+          <img src="/images/title-new.png" alt="내안의" className="h-20 mr-4" />
+          <img src="/images/quack-new.png" alt="꽥" className="h-24 bounce-animation" />
+        </div>
+
+        {/* Subtitle */}
+        <div className="text-center mb-8">
+          <p className="font-medium text-base pb-0 text-slate-500">꽥꽥이로 알아보는 멘탈 방어 유형</p>
+        </div>
+
+        {/* Speech Bubble */}
+        <div className="relative mb-8">
+          <div className="bg-gray-400 text-white rounded-full font-medium my-0 opacity-100 text-sm px-[17px] py-2.5">
+            너는 어떤 꽥이야?
+          </div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2">
+            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[15px] border-l-transparent border-r-transparent border-t-gray-400"></div>
+          </div>
+        </div>
+
+        {/* Duck Characters */}
+        <div className="flex justify-center items-center mt-[-29px] mb-[3px]">
+          <img src="/images/duck-group-new.png" alt="Duck Characters" className="h-48" />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="w-full max-w-md space-y-4">
+          <button
+            onClick={handleStartTest}
+            className="w-full hover:bg-[#6a8659] text-white py-4 px-6 rounded-full text-lg font-bold border-2 border-white shadow-lg transition-all duration-300 bg-[#779966] hover:shadow-xl hover:scale-105"
+          >
+            내안의 꽥 찾으러 가기
+          </button>
+
+          <button
+            onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
+            className="w-full hover:bg-[#86A276] text-white py-4 px-6 rounded-full text-lg font-bold border-2 border-white shadow-lg transition-all duration-300 bg-[#9BB88A] hover:shadow-xl hover:scale-105"
+          >
+            멘탈케어 게임 오리의 꿈 사전예약 하러가기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
