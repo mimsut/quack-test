@@ -115,7 +115,7 @@ const duckTypes = {
       "홍머리오리는 '솔직함이 최고야!'를 신조로 사는 직설적인 화법의 소유자입니다. 생각나는 대로 말하고, 좋은 건 좋다, 싫은 건 싫다고 분명하게 표현해요. 친구가 이상한 옷을 입고 나오면 '그거 별로야'라고 바로 말하지만, 덕분에 친구들은 홍머리오리 앞에서만큼은 가식 없이 지낼 수 있죠. 하지만 가끔 너무 직설적인 말로 상대방에게 상처를 주기도 해서, 나중에 '내가 너무 심했나?'라며 후회하기도 합니다. 그래도 진심이 느껴지는 조언을 해주는 믿음직한 친구예요.",
     strengths: ["솔직함", "투명함", "결단력", "직관력", "용기"],
     weaknesses: ["과격함", "감정폭발", "융통성 부족", "공격성", "사회적 긴장"],
-    compatible: ["원앙", "점무늬오리"],
+    compatible: ["원앙", "청머리오리"],
     incompatible: ["비오리", "가창오리"],
   },
   알락오리: {
@@ -446,6 +446,7 @@ export default function Home() {
   const [username, setUsername] = useState("")
   const [showNicknameInput, setShowNicknameInput] = useState(false)
   const [selectedDuckDetail, setSelectedDuckDetail] = useState<string | null>(null)
+  const [showResultButton, setShowResultButton] = useState(false)
 
   const handleAnswer = (answerType: string) => {
     const newAnswers = [...answers, answerType]
@@ -454,16 +455,14 @@ export default function Home() {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
     } else {
-      // Calculate result
-      const typeCounts: { [key: string]: number } = {}
-      newAnswers.forEach((answer) => {
-        typeCounts[answer] = (typeCounts[answer] || 0) + 1
-      })
-
-      const resultType = Object.keys(typeCounts).reduce((a, b) => (typeCounts[a] > typeCounts[b] ? a : b))
-
-      setShowResult(true)
+      // 마지막 질문이므로 결과 확인 버튼 표시
+      setShowResultButton(true)
     }
+  }
+
+  const handleShowResult = () => {
+    setShowResult(true)
+    setShowResultButton(false)
   }
 
   const handleRestart = () => {
@@ -472,6 +471,7 @@ export default function Home() {
     setShowResult(false)
     setTestStarted(false)
     setShowAllTypes(false)
+    setShowResultButton(false)
   }
 
   const handleStartTest = () => {
@@ -504,9 +504,18 @@ export default function Home() {
       typeCounts[answer] = (typeCounts[answer] || 0) + 1
     })
 
-    const resultType = Object.keys(typeCounts).reduce((a, b) => (typeCounts[a] > typeCounts[b] ? a : b))
+    // 가장 많이 선택된 타입 찾기
+    let resultType = Object.keys(typeCounts)[0] || "청둥오리" // 기본값
+    let maxCount = 0
 
-    return duckTypes[resultType as keyof typeof duckTypes]
+    Object.keys(typeCounts).forEach((type) => {
+      if (typeCounts[type] > maxCount) {
+        maxCount = typeCounts[type]
+        resultType = type
+      }
+    })
+
+    return duckTypes[resultType as keyof typeof duckTypes] || duckTypes["청둥오리"]
   }
 
   const handleDuckClick = (duckName: string) => {
@@ -690,6 +699,18 @@ export default function Home() {
               ))}
             </div>
           </div>
+
+          {/* Show result button after last question */}
+          {showResultButton && (
+            <div className="text-center">
+              <Button
+                onClick={handleShowResult}
+                className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 text-lg rounded-full font-bold shadow-lg"
+              >
+                결과 확인하기
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -697,7 +718,14 @@ export default function Home() {
 
   // Show result page
   if (showResult) {
-    return <ResultPage duckType={getResult()} onRestart={handleRestart} onViewAllTypes={handleViewAllTypes} />
+    return (
+      <ResultPage
+        duckType={getResult()}
+        username={username}
+        onRestart={handleRestart}
+        onViewAllTypes={handleViewAllTypes}
+      />
+    )
   }
 
   // Show cover page
@@ -712,8 +740,10 @@ export default function Home() {
       }}
     >
       <div className="flex flex-col items-center justify-start min-h-screen px-4 py-8">
-        {/* Header */}
-        <div className="max-w-md mb-0 h-auto w-[63%]"></div>
+        {/* Header with logo */}
+        <div className="text-center mb-4">
+          <img src="/images/symple-logo.png" alt="SYMPLE" className="h-4 mx-auto opacity-60" />
+        </div>
 
         {/* Title Section */}
         <div className="flex items-center justify-center mb-1">
@@ -723,7 +753,7 @@ export default function Home() {
 
         {/* Subtitle */}
         <div className="text-center mb-8">
-          <p className="font-medium text-base pb-0 text-slate-500">꽥꽥이로 알아보는 멘탈 방어 유형</p>
+          <p className="font-medium text-base text-slate-500 pb-[33px]">꽥꽥이로 알아보는 멘탈 방어 유형</p>
         </div>
 
         {/* Speech Bubble */}
@@ -732,12 +762,12 @@ export default function Home() {
             너는 어떤 꽥이야?
           </div>
           <div className="absolute top-full left-1/2 transform -translate-x-1/2">
-            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[15px] border-l-transparent border-r-transparent border-t-gray-400"></div>
+            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[15px] border-l-transparent border-r-transparent border-t-gray-400 my-0 py-[px0]"></div>
           </div>
         </div>
 
         {/* Duck Characters */}
-        <div className="flex justify-center items-center mt-[-29px] mb-[3px]">
+        <div className="flex justify-center items-center mb-[3px] mt-[-30px]">
           <img src="/images/duck-group-new.png" alt="Duck Characters" className="h-48" />
         </div>
 

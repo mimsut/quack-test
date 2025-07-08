@@ -13,7 +13,7 @@ interface ResultPageProps {
     compatible: string[]
     incompatible: string[]
   }
-  username: string
+  username?: string // optional로 변경
   onRestart: () => void
   onViewAllTypes: () => void
 }
@@ -78,6 +78,29 @@ const compatibilityDescriptions = {
   // ... 다른 유형들도 추가
 }
 
+const duckSummaries = {
+  가창오리: "조용히 관찰하며 신중하게 행동하는 깊이 있는 사색가",
+  고방오리: "체계적인 계획으로 모든 일을 완벽하게 처리하는 전략가",
+  발구지: "자유롭고 즉흥적인 에너지로 새로운 모험을 즐기는 탐험가",
+  비오리: "섬세한 감성으로 타인의 마음을 깊이 이해하는 공감자",
+  바다비오리: "논리적 사고로 문제를 분석하고 해결하는 냉철한 전략가",
+  호사비오리: "낭만적 감성과 열정으로 삶을 예술처럼 살아가는 몽상가",
+  원앙: "사교적 매력으로 사람들을 하나로 묶어주는 천성의 중재자",
+  쇠오리: "강한 추진력과 리더십으로 목표를 달성하는 실행가",
+  청둥오리: "유연한 적응력으로 어떤 상황에서도 자연스럽게 어울리는 조화자",
+  청머리오리: "끝없는 창의력으로 새로운 아이디어를 만들어내는 발명가",
+  홍머리오리: "솔직하고 직설적인 소통으로 진실을 추구하는 정직한 친구",
+  알락오리: "꼼꼼한 분석력으로 완벽을 추구하는 디테일의 달인",
+  점무늬오리: "온화한 성품으로 평화와 조화를 만들어가는 중재자",
+  혹부리오리: "강한 결단력과 카리스마로 팀을 이끄는 천상의 리더",
+  황오리: "밝은 에너지와 긍정적 마인드로 주변을 환하게 만드는 비타민",
+  흰등오리: "차분한 안정감으로 든든한 버팀목이 되어주는 신뢰의 상징",
+  흰뺨검둥오리: "따뜻한 공감과 친절함으로 모든 이를 포용하는 천사",
+  흰뺨오리: "무한한 상상력과 창의성으로 새로운 세계를 그려내는 아티스트",
+  흰죽지: "독립적이고 자기주도적으로 자신만의 길을 개척하는 개척자",
+  넓적부리: "여유로운 마음으로 평화롭게 살아가는 자연주의자",
+}
+
 export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: ResultPageProps) {
   const resultCardRef = useRef<HTMLDivElement>(null)
 
@@ -85,19 +108,91 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
     if (!resultCardRef.current) return
 
     try {
-      const html2canvas = (await import("html2canvas")).default
-      const canvas = await html2canvas(resultCardRef.current, {
-        backgroundColor: "white",
-        scale: 2,
-        useCORS: true,
-      })
+      // DOM을 canvas로 변환하는 대신 직접 canvas에 그리기
+      const canvas = document.createElement("canvas")
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
 
-      const link = document.createElement("a")
-      link.download = `${username}_${duckType.name}_결과.png`
-      link.href = canvas.toDataURL()
-      link.click()
+      canvas.width = 400
+      canvas.height = 600
+
+      // 배경색 설정
+      ctx.fillStyle = "#ffffff"
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // 텍스트 설정
+      ctx.fillStyle = "#333333"
+      ctx.font = "bold 24px Arial, sans-serif"
+      ctx.textAlign = "center"
+
+      // 제목 그리기
+      ctx.fillText(`${username || "당신"}의 꽥은`, canvas.width / 2, 50)
+      ctx.font = "bold 32px Arial, sans-serif"
+      ctx.fillText(duckType.name, canvas.width / 2, 90)
+
+      // 태그 그리기
+      ctx.font = "16px Arial, sans-serif"
+      const tagsText = duckType.tags.map((tag) => `#${tag}`).join(" ")
+      ctx.fillText(tagsText, canvas.width / 2, 120)
+
+      // 오리 이미지 그리기
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.onload = () => {
+        ctx.drawImage(img, canvas.width / 2 - 60, 140, 120, 120)
+
+        // 설명 텍스트 그리기
+        ctx.font = "14px Arial, sans-serif"
+        ctx.textAlign = "left"
+        const words = duckType.description.split(" ")
+        let line = ""
+        let y = 300
+        const maxWidth = canvas.width - 40
+
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + " "
+          const metrics = ctx.measureText(testLine)
+          if (metrics.width > maxWidth && n > 0) {
+            ctx.fillText(line, 20, y)
+            line = words[n] + " "
+            y += 20
+          } else {
+            line = testLine
+          }
+        }
+        ctx.fillText(line, 20, y)
+
+        // 다운로드
+        const link = document.createElement("a")
+        link.download = `${username}_${duckType.name}_결과.png`
+        link.href = canvas.toDataURL()
+        link.click()
+      }
+      img.src = duckImages[duckType.name] || "/placeholder.svg"
     } catch (error) {
       console.error("이미지 저장 실패:", error)
+    }
+  }
+
+  const handleShare = async () => {
+    const text = `나는 ${duckType.name}! 내 안의 꽥 테스트 결과: ${duckType.tags.join(", ")}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `나는 ${duckType.name}!`,
+          text: text,
+          url: window.location.href,
+        })
+      } catch (error) {
+        console.error("공유 실패:", error)
+      }
+    } else {
+      // 클립보드에 복사
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text + " " + window.location.href)
+        alert("결과가 클립보드에 복사되었습니다!")
+      }
     }
   }
 
@@ -122,7 +217,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
         <div ref={resultCardRef} className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
           {/* Title */}
           <div className="text-center mb-4">
-            <h2 className="text-lg font-bold text-gray-700 mb-2">{username}의 꽥은</h2>
+            <h2 className="text-lg font-bold text-gray-700 mb-2">{username || "당신"}의 꽥은</h2>
             <h1 className="text-4xl font-bold text-gray-800 mb-3">{duckType.name}</h1>
             <div className="flex justify-center gap-2 mb-4">
               {duckType.tags.map((tag, index) => (
@@ -139,7 +234,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           {/* Duck Character */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-4">
-              <div className="w-56 h-56 rounded-full border-4 flex items-center justify-center bg-transparent border-transparent">
+              <div className="h-56 rounded-full border-4 flex items-center justify-center bg-transparent border-transparent my-[-34px] w-[265px]">
                 <img
                   src={duckImages[duckType.name] || "/placeholder.svg"}
                   alt={duckType.name}
@@ -279,6 +374,9 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                       compatibleType as keyof any
                     ] || "서로 잘 맞는 관계예요"}
                   </div>
+                  <div className="text-xs text-gray-600 text-center px-2">
+                    {duckSummaries[compatibleType as keyof typeof duckSummaries]}
+                  </div>
                 </div>
               ))}
             </div>
@@ -348,7 +446,10 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             모든 유형 보기
           </Button>
 
-          <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white py-4 text-lg rounded-full font-bold shadow-lg border-2 border-white">
+          <Button
+            onClick={handleShare}
+            className="w-full bg-gray-600 hover:bg-gray-700 text-white py-4 text-lg rounded-full font-bold shadow-lg border-2 border-white"
+          >
             <ShareIcon className="w-6 h-6 mr-2" />
             결과 공유하기
           </Button>
@@ -357,7 +458,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
             className="w-full bg-[#9BB88A] hover:bg-[#86A276] text-white py-4 text-lg rounded-full font-bold shadow-lg border-2 border-white"
           >
-            멘탈케어 게임 오리의 꿈 사전예약 하러가기
+            오리의 꿈 사전예약 하러가기
           </Button>
 
           <Button
