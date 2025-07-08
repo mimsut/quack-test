@@ -95,7 +95,7 @@ const duckSummaries = {
   혹부리오리: "강한 결단력과 카리스마로 팀을 이끄는 천상의 리더",
   황오리: "밝은 에너지와 긍정적 마인드로 주변을 환하게 만드는 비타민",
   흰등오리: "차분한 안정감으로 든든한 버팀목이 되어주는 신뢰의 상징",
-  흰뺨검둥오리: "따뜻한 공감과 친절함으로 모든 이를 포용하는 천사",
+  흰뺨검둥오리: "따한 공감과 친절함으로 모든 이를 포용하는 천사",
   흰뺨오리: "무한한 상상력과 창의성으로 새로운 세계를 그려내는 아티스트",
   흰죽지: "독립적이고 자기주도적으로 자신만의 길을 개척하는 개척자",
   넓적부리: "여유로운 마음으로 평화롭게 살아가는 자연주의자",
@@ -223,7 +223,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               {duckType.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border-black border"
+                  className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-black"
                 >
                   #{tag}
                 </span>
@@ -292,7 +292,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 <span className="text-white font-bold text-base">력</span>
               </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2 flex-row items-start py-[px] my-0 mb-0">
               {duckType.strengths.slice(0, 5).map((strength, index) => (
                 <span
                   key={index}
@@ -351,7 +351,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             <div className="flex justify-center items-center gap-6">
               {duckType.compatible.slice(0, 2).map((compatibleType, index) => (
                 <div key={index} className="text-center flex flex-col items-center">
-                  <div className="h-16 w-16 bg-blue-200/50 rounded-full border-4 border-blue-400 flex items-center justify-center mb-2">
+                  <div className="bg-blue-200/50 rounded-full border-blue-400 flex items-center justify-center mb-2 border-2 size-auto w-16 h-16">
                     <img
                       src={duckImages[compatibleType] || "/placeholder.svg"}
                       alt={compatibleType}
@@ -369,14 +369,6 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                       </span>
                     ))}
                   </div>
-                  <div className="text-xs text-gray-600 text-center px-2">
-                    {compatibilityDescriptions[duckType.name as keyof typeof compatibilityDescriptions]?.compatible[
-                      compatibleType as keyof any
-                    ] || "서로 잘 맞는 관계예요"}
-                  </div>
-                  <div className="text-xs text-gray-600 text-center px-2">
-                    {duckSummaries[compatibleType as keyof typeof duckSummaries]}
-                  </div>
                 </div>
               ))}
             </div>
@@ -386,9 +378,6 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">잘</span>
-              </div>
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
                 <span className="text-white font-bold text-base">안</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
@@ -397,14 +386,11 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
                 <span className="text-white font-bold text-base">아</span>
               </div>
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">ㅠ</span>
-              </div>
             </div>
             <div className="flex justify-center items-center gap-6">
               {duckType.incompatible.slice(0, 2).map((incompatibleType, index) => (
                 <div key={index} className="text-center flex flex-col items-center">
-                  <div className="w-16 h-16 bg-red-200/50 rounded-full border-4 border-red-400 flex items-center justify-center mb-2">
+                  <div className="w-16 h-16 bg-red-200/50 rounded-full border-red-400 flex items-center justify-center mb-2 border-2">
                     <img
                       src={duckImages[incompatibleType] || "/placeholder.svg"}
                       alt={incompatibleType}
@@ -426,51 +412,53 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               ))}
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="mt-6 space-y-3">
-          <Button
-            onClick={handleSaveImage}
-            className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 text-lg rounded-full font-bold shadow-lg border-2 border-white"
-          >
-            <Download className="mr-2 size-5" />
-            이미지 저장하기
-          </Button>
+          {/* Buttons */}
+          <div className="flex flex-col gap-4 mt-6">
+            <Button
+              onClick={handleSaveImage}
+              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-center text-base"
+            >
+              <Download className="mr-2 size-5" />
+              이미지 저장하기
+            </Button>
 
-          <Button
-            onClick={onViewAllTypes}
-            className="w-full bg-white/30 hover:bg-white/50 text-black py-4 text-lg rounded-full font-bold shadow-lg border-2 border-white backdrop-blur-sm"
-          >
-            <Eye className="w-5 h-5 mr-2" />
-            모든 유형 보기
-          </Button>
+            <Button
+              onClick={onViewAllTypes}
+              className="w-full bg-white/30 hover:bg-white/50 text-black py-4 rounded-full font-bold shadow-lg border-2 border-white backdrop-blur-sm text-base"
+            >
+              <Eye className="w-5 h-5 mr-2" />
+              모든 유형 보기
+            </Button>
 
-          <Button
-            onClick={handleShare}
-            className="w-full bg-gray-600 hover:bg-gray-700 text-white py-4 text-lg rounded-full font-bold shadow-lg border-2 border-white"
-          >
-            <ShareIcon className="w-6 h-6 mr-2" />
-            결과 공유하기
-          </Button>
+            <Button
+              onClick={handleShare}
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base"
+            >
+              <ShareIcon className="w-6 h-6 mr-2" />
+              결과 공유하기
+            </Button>
 
-          <Button
-            onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
-            className="w-full bg-[#9BB88A] hover:bg-[#86A276] text-white py-4 text-lg rounded-full font-bold shadow-lg border-2 border-white"
-          >
-            오리의 꿈 사전예약 하러가기
-          </Button>
+            <Button
+              onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
+              className="w-full bg-[#9BB88A] hover:bg-[#86A276] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base"
+            >
+              오리의 꿈 사전예약 하러가기
+            </Button>
 
-          <Button
-            onClick={onRestart}
-            variant="ghost"
-            className="w-full text-white py-4 text-lg rounded-full font-bold underline hover:bg-white/10"
-          >
-            <RotateCcw className="w-5 h-5 mr-2" />
-            테스트 다시하기
-          </Button>
+            <Button
+              onClick={onRestart}
+              variant="ghost"
+              className="w-full py-4 rounded-full font-bold underline hover:bg-white/10 text-base text-black"
+            >
+              <RotateCcw className="w-5 h-5 mr-2" />
+              테스트 다시하기
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   )
 }
+
+export default ResultPage

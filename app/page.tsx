@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
-import { ResultPage } from "@/components/result-page"
+import ResultPage from "@/components/result-page"
 import { ChevronLeft } from "lucide-react"
 
 // Duck personality types data (same as before)
@@ -55,7 +55,7 @@ const duckTypes = {
       "바다비오리는 모든 것을 논리적으로 분석하는 냉철한 전략가입니다. 감정보다는 팩트와 데이터를 중시하고, '그게 합리적인 선택이야?'가 입버릇이에요. 친구들의 고민 상담을 들어줄 때도 감정적 위로보다는 현실적인 해결책을 제시하죠. '울지 말고 이렇게 해봐'라고 말하지만, 정작 본인도 속으로는 '내가 너무 차갑게 말한 건 아닐까?' 걱정합니다. 토론을 좋아하고 새로운 지식을 습득하는 걸 즐기지만, 가끔 '인간미가 부족하다'는 소리를 들어서 서운해해요.",
     strengths: ["논리적 사고", "분석력", "설득력", "집중력", "문제해결력"],
     weaknesses: ["감정표현 부족", "융통성 부족", "사회적 거리감", "완고함", "고립감"],
-    compatible: ["알락오리", "혹부리오리"],
+    compatible: ["알��오리", "혹부리오리"],
     incompatible: ["비오리", "호사비오리"],
   },
   호사비오리: {
@@ -446,7 +446,6 @@ export default function Home() {
   const [username, setUsername] = useState("")
   const [showNicknameInput, setShowNicknameInput] = useState(false)
   const [selectedDuckDetail, setSelectedDuckDetail] = useState<string | null>(null)
-  const [showResultButton, setShowResultButton] = useState(false)
 
   const handleAnswer = (answerType: string) => {
     const newAnswers = [...answers, answerType]
@@ -455,14 +454,11 @@ export default function Home() {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
     } else {
-      // 마지막 질문이므로 결과 확인 버튼 표시
-      setShowResultButton(true)
+      // 마지막 질문 완료 - 바로 결과 페이지로 이동
+      setTimeout(() => {
+        setShowResult(true)
+      }, 500) // 약간의 딜레이 후 결과 표시
     }
-  }
-
-  const handleShowResult = () => {
-    setShowResult(true)
-    setShowResultButton(false)
   }
 
   const handleRestart = () => {
@@ -471,7 +467,6 @@ export default function Home() {
     setShowResult(false)
     setTestStarted(false)
     setShowAllTypes(false)
-    setShowResultButton(false)
   }
 
   const handleStartTest = () => {
@@ -505,7 +500,7 @@ export default function Home() {
     })
 
     // 가장 많이 선택된 타입 찾기
-    let resultType = Object.keys(typeCounts)[0] || "청둥오리" // 기본값
+    let resultType = "청둥오리" // 기본값
     let maxCount = 0
 
     Object.keys(typeCounts).forEach((type) => {
@@ -665,7 +660,7 @@ export default function Home() {
   }
 
   // Show question page
-  if (testStarted) {
+  if (testStarted && !showResult) {
     const question = questions[currentQuestion]
     const progress = ((currentQuestion + 1) / questions.length) * 100
 
@@ -699,18 +694,6 @@ export default function Home() {
               ))}
             </div>
           </div>
-
-          {/* Show result button after last question */}
-          {showResultButton && (
-            <div className="text-center">
-              <Button
-                onClick={handleShowResult}
-                className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 text-lg rounded-full font-bold shadow-lg"
-              >
-                결과 확인하기
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     )
@@ -777,14 +760,14 @@ export default function Home() {
             onClick={handleStartTest}
             className="w-full hover:bg-[#6a8659] text-white py-4 px-6 rounded-full text-lg font-bold border-2 border-white shadow-lg transition-all duration-300 bg-[#779966] hover:shadow-xl hover:scale-105"
           >
-            내안의 꽥 찾으러 가기
+            내 안의 꽥 찾으러 가기
           </button>
 
           <button
             onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
             className="w-full hover:bg-[#86A276] text-white py-4 px-6 rounded-full text-lg font-bold border-2 border-white shadow-lg transition-all duration-300 bg-[#9BB88A] hover:shadow-xl hover:scale-105"
           >
-            멘탈케어 게임 오리의 꿈 사전예약 하러가기
+            멘탈케어 게임 오리의 꿈 사전예약 하기
           </button>
         </div>
       </div>
