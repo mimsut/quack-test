@@ -471,13 +471,17 @@ export default function Home() {
   const [username, setUsername] = useState("")
   const [showNicknameInput, setShowNicknameInput] = useState(false)
   const [selectedDuckDetail, setSelectedDuckDetail] = useState<string | null>(null)
+  const [selectedOption, setSelectedOption] = useState<number | null>(null)
 
   // Track page views
   useEffect(() => {
     gtag.pageview(window.location.pathname)
   }, [])
 
-  const handleAnswer = (answerType: string) => {
+  const handleAnswer = (answerType: string, optionIndex: number) => {
+    // Set visual selection
+    setSelectedOption(optionIndex)
+
     // Track answer selection
     gtag.event({
       action: "answer_question",
@@ -489,22 +493,27 @@ export default function Home() {
     const newAnswers = [...answers, answerType]
     setAnswers(newAnswers)
 
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1)
-    } else {
-      // Track quiz completion
-      gtag.event({
-        action: "complete_quiz",
-        category: "quiz",
-        label: "quiz_completed",
-        value: questions.length,
-      })
+    // Reset selection state and move to next question after a brief delay
+    setTimeout(() => {
+      setSelectedOption(null) // Reset visual selection
 
-      // 마지막 질문 완료 - 바로 결과 페이지로 이동
-      setTimeout(() => {
-        setShowResult(true)
-      }, 500) // 약간의 딜레이 후 결과 표시
-    }
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1)
+      } else {
+        // Track quiz completion
+        gtag.event({
+          action: "complete_quiz",
+          category: "quiz",
+          label: "quiz_completed",
+          value: questions.length,
+        })
+
+        // Complete quiz
+        setTimeout(() => {
+          setShowResult(true)
+        }, 500)
+      }
+    }, 300) // Brief delay to show selection feedback
   }
 
   const handleRestart = () => {
@@ -520,6 +529,7 @@ export default function Home() {
     setShowResult(false)
     setTestStarted(false)
     setShowAllTypes(false)
+    setSelectedOption(null) // Reset selection state
   }
 
   const handleStartTest = () => {
@@ -565,6 +575,9 @@ export default function Home() {
       category: "navigation",
       label: `question_${currentQuestion + 1}`,
     })
+
+    // Reset selection state
+    setSelectedOption(null)
 
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1)
@@ -883,22 +896,26 @@ export default function Home() {
           {/* Header with back button */}
           <div className="mb-8">
             <div className="flex items-center mb-4">
-              <button onClick={handleGoBack} className="p-2 hover:bg-[#779966]/20 rounded-lg">
+              <button
+                onClick={handleGoBack}
+                disabled={selectedOption !== null}
+                className="p-2 hover:bg-[#779966]/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <svg className="w-6 h-6 text-[#779966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
+              
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-[#779966] h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              ></div>
+              <div className="bg-[#779966] h-2 rounded-full progress-bar" style={{ width: `${progress}%` }}></div>
             </div>
           </div>
 
           {/* Question */}
-          <div className="bg-white rounded-lg p-6 shadow-md mb-6">
+          <div
+            className={`bg-white rounded-lg p-6 shadow-md mb-6 transition-all duration-300 ${selectedOption !== null ? "question-loading" : ""}`}
+          >
             <h2 className="font-bold text-gray-800 mb-6 text-center text-lg">{question.question}</h2>
 
             {/* Question Image */}
@@ -907,7 +924,7 @@ export default function Home() {
                 <img
                   src={questionImage || "/placeholder.svg"}
                   alt="Question illustration"
-                  className="w-auto h-48 object-contain"
+                  className="w-auto h-48 object-contain transition-opacity duration-300"
                 />
               </div>
             )}
@@ -916,13 +933,43 @@ export default function Home() {
               {question.options.map((option, index) => (
                 <button
                   key={index}
-                  onClick={() => handleAnswer(option.type)}
-                  className="w-full text-left justify-start h-auto py-4 px-4 border-2 border-gray-200 hover:border-[#779966] hover:bg-[#779966]/10 text-gray-700 hover:text-gray-800 rounded-lg transition-all"
+                  onClick={() => handleAnswer(option.type, index)}
+                  disabled={selectedOption !== null}
+                  className={`option-button w-full text-left justify-start h-auto py-4 px-4 border-2 rounded-lg transition-all duration-200 ${
+                    selectedOption === index
+                      ? "border-[#779966] bg-[#779966] text-white shadow-lg transform scale-[0.98] option-selected"
+                      : selectedOption !== null
+                        ? "border-gray-200 text-gray-400 bg-gray-50 opacity-60"
+                        : "border-gray-200 hover:border-[#779966] hover:bg-[#779966]/10 text-gray-700 hover:text-gray-800"
+                  }`}
                 >
-                  {option.text}
+                  <div className="flex items-center justify-between">
+                    <span className="flex-1">{option.text}</span>
+                    {selectedOption === index && (
+                      <div className="ml-2 flex-shrink-0 animate-pulse">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
+
+            {/* Loading indicator when option is selected */}
+            {selectedOption !== null && (
+              <div className="flex justify-center mt-4">
+                <div className="flex items-center text-[#779966] text-sm">
+                  <div className="w-4 h-4 border-2 border-[#779966] border-t-transparent rounded-full animate-spin mr-2"></div>
+                  다음 질문으로 이동 중...
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { ShareIcon, Eye } from "lucide-react"
+import { ShareIcon, Eye } from 'lucide-react'
 import { useRef, useState } from "react"
 import html2canvas from "html2canvas"
 import * as gtag from "@/lib/gtag"
@@ -167,70 +167,216 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
       // Preload all images first
       await preloadImages()
 
-      // Wait a bit for any pending renders
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      // Wait for any pending renders and font loading
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Temporarily modify styles for better canvas rendering
+      // Store original styles
       const originalStyle = element.style.cssText
+      const originalTransform = element.style.transform
+      const originalPosition = element.style.position
+
+      // Apply enhanced styles for better capture
       element.style.transform = "none"
       element.style.position = "relative"
       element.style.zIndex = "9999"
+      element.style.backgroundColor = "rgba(255, 255, 255, 0.95)"
+      element.style.minHeight = "auto"
+      element.style.width = "400px"
+      element.style.maxWidth = "400px"
+      element.style.margin = "0 auto"
 
-      // Create canvas with enhanced options
+      // Force layout recalculation
+      element.offsetHeight
+
+      // Enhanced canvas options for better quality and compatibility
       const canvas = await html2canvas(element, {
         backgroundColor: "#749665",
-        scale: 2,
+        scale: window.devicePixelRatio || 2,
         useCORS: true,
         allowTaint: false,
         logging: false,
-        width: element.offsetWidth,
-        height: element.offsetHeight,
+        width: 400,
+        height: element.scrollHeight,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: element.offsetWidth,
-        windowHeight: element.offsetHeight,
-        onclone: (clonedDoc) => {
-          // Ensure fonts are loaded in the cloned document
+        windowWidth: 400,
+        windowHeight: element.scrollHeight,
+        foreignObjectRendering: true,
+        removeContainer: true,
+        onclone: (clonedDoc, clonedElement) => {
+          // Enhanced font loading and styling for cloned document
           const style = clonedDoc.createElement("style")
           style.textContent = `
-            @font-face {
-              font-family: "MoneyGraphy";
-              src: url("/fonts/Moneygraphy-Rounded.ttf") format("truetype");
-            }
-            @font-face {
-              font-family: "TmoneyRoundWind";
-              src: url("/fonts/TmoneyRoundWindRegular.ttf") format("truetype");
-            }
-            * {
-              font-family: "MoneyGraphy", "TmoneyRoundWind", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
-            }
-            .w-10.h-10 {
-              display: flex !important;
-              align-items: center !important;
-              justify-content: center !important;
-            }
-            .w-10.h-10 span {
-              line-height: 1 !important;
-              display: flex !important;
-              align-items: center !important;
-              justify-content: center !important;
-              height: 100% !important;
-              width: 100% !important;
-            }
-            .rounded-full span {
-              display: inline-flex !important;
-              align-items: center !important;
-              justify-content: center !important;
-              line-height: 1.2 !important;
-            }
-          `
+          @font-face {
+            font-family: "MoneyGraphy";
+            src: url("${window.location.origin}/fonts/Moneygraphy-Rounded.ttf") format("truetype");
+            font-display: block;
+          }
+          @font-face {
+            font-family: "TmoneyRoundWind";
+            src: url("${window.location.origin}/fonts/TmoneyRoundWindRegular.ttf") format("truetype");
+            font-display: block;
+          }
+          
+          * {
+            font-family: "MoneyGraphy", "TmoneyRoundWind", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+            -webkit-font-smoothing: antialiased !important;
+            -moz-osx-font-smoothing: grayscale !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* Enhanced centering for all circular elements */
+          .w-10.h-10, .w-12.h-12, .w-16.h-16 {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+          }
+          
+          .w-10.h-10 span, .w-12.h-12 span, .w-16.h-16 span {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            text-align: center !important;
+            font-weight: bold !important;
+          }
+          
+          /* Enhanced tag styling */
+          .rounded-full.inline-flex {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+          
+          .rounded-full.inline-flex span {
+            position: static !important;
+            transform: none !important;
+            line-height: 1.2 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          
+          /* Image centering and sizing */
+          img {
+            display: block !important;
+            margin: 0 auto !important;
+            max-width: 100% !important;
+            height: auto !important;
+          }
+          
+          /* Container centering */
+          .text-center {
+            text-align: center !important;
+          }
+          
+          .flex.justify-center {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+          }
+          
+          .flex.items-center {
+            display: flex !important;
+            align-items: center !important;
+          }
+          
+          /* Background and layout fixes */
+          .bg-white\\/80 {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+          }
+          
+          .backdrop-blur-sm {
+            backdrop-filter: none !important;
+          }
+          
+          /* Ensure proper spacing */
+          .mb-6 { margin-bottom: 1.5rem !important; }
+          .mb-4 { margin-bottom: 1rem !important; }
+          .mb-3 { margin-bottom: 0.75rem !important; }
+          .mb-2 { margin-bottom: 0.5rem !important; }
+          .mb-10 { margin-bottom: 2.5rem !important; }
+          
+          /* Fix flex layouts */
+          .flex.flex-col {
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          
+          .flex.gap-2 {
+            display: flex !important;
+            gap: 0.5rem !important;
+          }
+          
+          .flex.gap-4 {
+            display: flex !important;
+            gap: 1rem !important;
+          }
+          
+          /* Ensure text wrapping */
+          .flex-wrap {
+            flex-wrap: wrap !important;
+          }
+          
+          /* Duck image specific styling */
+          .duck-main-image {
+            transform: scale(1.2) !important;
+            transform-origin: center center !important;
+          }
+        `
           clonedDoc.head.appendChild(style)
 
-          // Fix image sources in cloned document
+          // Fix all image sources in cloned document
           const images = clonedDoc.querySelectorAll("img")
           images.forEach((img) => {
             if (img.src.startsWith("/")) {
               img.src = window.location.origin + img.src
+            }
+            img.crossOrigin = "anonymous"
+          
+            // Ensure duck image has proper scaling
+            if (img.alt && img.alt.includes("오리")) {
+              img.style.transform = "scale(1.2)"
+              img.style.transformOrigin = "center center"
+            }
+          })
+
+          // Force all text elements to be properly centered
+          const textElements = clonedDoc.querySelectorAll(".w-10, .w-12, .w-16")
+          textElements.forEach((el) => {
+            const span = el.querySelector("span")
+            if (span) {
+              span.style.position = "absolute"
+              span.style.top = "50%"
+              span.style.left = "50%"
+              span.style.transform = "translate(-50%, -50%)"
+              span.style.display = "flex"
+              span.style.alignItems = "center"
+              span.style.justifyContent = "center"
+              span.style.width = "100%"
+              span.style.height = "100%"
+              span.style.textAlign = "center"
+              span.style.lineHeight = "1"
+            }
+          })
+
+          // Ensure all flex containers are properly centered
+          const flexContainers = clonedDoc.querySelectorAll(".flex")
+          flexContainers.forEach((el) => {
+            if (el.classList.contains("justify-center")) {
+              el.style.display = "flex"
+              el.style.justifyContent = "center"
+              el.style.alignItems = "center"
             }
           })
         },
@@ -238,15 +384,40 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
 
       // Restore original styles
       element.style.cssText = originalStyle
+      element.style.transform = originalTransform
+      element.style.position = originalPosition
 
       // Validate canvas
       if (!canvas || canvas.width === 0 || canvas.height === 0) {
         throw new Error("캔버스 생성에 실패했습니다.")
       }
 
-      // Convert to blob and download
+      // Create a new canvas with proper dimensions and background
+      const finalCanvas = document.createElement("canvas")
+      const finalCtx = finalCanvas.getContext("2d")
+    
+      if (!finalCtx) {
+        throw new Error("최종 캔버스 컨텍스트를 생성할 수 없습니다.")
+      }
+
+      // Set final canvas dimensions with padding
+      const padding = 40
+      finalCanvas.width = canvas.width + (padding * 2)
+      finalCanvas.height = canvas.height + (padding * 2)
+
+      // Draw background
+      const gradient = finalCtx.createLinearGradient(0, 0, 0, finalCanvas.height)
+      gradient.addColorStop(0, "#749665")
+      gradient.addColorStop(1, "#5a7a4d")
+      finalCtx.fillStyle = gradient
+      finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height)
+
+      // Draw the captured content centered
+      finalCtx.drawImage(canvas, padding, padding)
+
+      // Convert to blob with high quality
       const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob(resolve, "image/png", 1.0)
+        finalCanvas.toBlob(resolve, "image/png", 1.0)
       })
 
       if (!blob) {
@@ -345,7 +516,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-4 w-full flex justify-center">
               <div
-                className="flex items-center justify-center w-fit h-fit my-10 mb-[60px]"
+                className="flex items-center justify-center my-10 mb-[60px] w-6/12 h-fit"
                 style={{ transform: "scale(2)" }}
               >
                 <img
@@ -568,6 +739,11 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                   아
                 </span>
               </div>
+              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
+                  요
+                </span>
+              </div>
             </div>
             <div className="flex justify-center items-start gap-4 mb-10">
               {duckType.incompatible.slice(0, 2).map((incompatibleType, index) => (
@@ -605,30 +781,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
 
           {/* Buttons */}
           <div className="flex flex-col gap-4 mt-6">
-            <Button
-              onClick={handleSaveImage}
-              disabled={isGeneratingImage}
-              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGeneratingImage ? (
-                <>
-                  <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  이미지 생성 중...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  이미지로 저장하기
-                </>
-              )}
-            </Button>
+            
 
             <Button
               onClick={onViewAllTypes}
