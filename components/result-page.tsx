@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { ShareIcon, Eye } from 'lucide-react'
+import { ShareIcon, Eye } from "lucide-react"
 import { useRef, useState } from "react"
 import html2canvas from "html2canvas"
 import * as gtag from "@/lib/gtag"
@@ -343,7 +343,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               img.src = window.location.origin + img.src
             }
             img.crossOrigin = "anonymous"
-          
+
             // Ensure duck image has proper scaling
             if (img.alt && img.alt.includes("오리")) {
               img.style.transform = "scale(1.2)"
@@ -395,15 +395,15 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
       // Create a new canvas with proper dimensions and background
       const finalCanvas = document.createElement("canvas")
       const finalCtx = finalCanvas.getContext("2d")
-    
+
       if (!finalCtx) {
         throw new Error("최종 캔버스 컨텍스트를 생성할 수 없습니다.")
       }
 
       // Set final canvas dimensions with padding
       const padding = 40
-      finalCanvas.width = canvas.width + (padding * 2)
-      finalCanvas.height = canvas.height + (padding * 2)
+      finalCanvas.width = canvas.width + padding * 2
+      finalCanvas.height = canvas.height + padding * 2
 
       // Draw background
       const gradient = finalCtx.createLinearGradient(0, 0, 0, finalCanvas.height)
@@ -739,11 +739,6 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                   아
                 </span>
               </div>
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  요
-                </span>
-              </div>
             </div>
             <div className="flex justify-center items-start gap-4 mb-10">
               {duckType.incompatible.slice(0, 2).map((incompatibleType, index) => (
@@ -781,7 +776,30 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
 
           {/* Buttons */}
           <div className="flex flex-col gap-4 mt-6">
-            
+            <Button
+              onClick={handleSaveImage}
+              disabled={isGeneratingImage}
+              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGeneratingImage ? (
+                <>
+                  <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  이미지 생성 중...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  이미지로 저장하기
+                </>
+              )}
+            </Button>
 
             <Button
               onClick={onViewAllTypes}
