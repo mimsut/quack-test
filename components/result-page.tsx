@@ -1,7 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { ShareIcon, Eye } from "lucide-react"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import html2canvas from "html2canvas"
 import * as gtag from "@/lib/gtag"
 
@@ -15,7 +15,7 @@ interface ResultPageProps {
     compatible: string[]
     incompatible: string[]
   }
-  username?: string // optional로 변경
+  username?: string
   onRestart: () => void
   onViewAllTypes: () => void
 }
@@ -91,6 +91,7 @@ const duckSummaries = {
 
 export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: ResultPageProps) {
   const resultCardRef = useRef<HTMLDivElement>(null)
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
 
   const handleShare = async () => {
     // Track share action
@@ -122,43 +123,167 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
     }
   }
 
-  const handleSaveImage = async () => {
-    // Track image save action
-    gtag.event({
-      action: "save_image",
-      category: "engagement",
-      label: duckType.name,
+  const preloadImages = async (): Promise<void> => {
+    const imageUrls = [
+      duckImages[duckType.name],
+      ...duckType.compatible.slice(0, 2).map((type) => duckImages[type]),
+      ...duckType.incompatible.slice(0, 2).map((type) => duckImages[type]),
+    ].filter(Boolean)
+
+    const imagePromises = imageUrls.map((url) => {
+      return new Promise<void>((resolve, reject) => {
+        const img = new Image()
+        img.crossOrigin = "anonymous"
+        img.onload = () => resolve()
+        img.onerror = () => {
+          console.warn(`Failed to preload image: ${url}`)
+          resolve() // Continue even if some images fail
+        }
+        img.src = url
+      })
     })
 
-    const element = resultCardRef.current
-    if (!element) return
+    await Promise.all(imagePromises)
+  }
+
+  const handleSaveImage = async () => {
+    if (isGeneratingImage) return
+
+    setIsGeneratingImage(true)
 
     try {
-      // Create canvas from the result card
+      // Track image save action
+      gtag.event({
+        action: "save_image",
+        category: "engagement",
+        label: duckType.name,
+      })
+
+      const element = resultCardRef.current
+      if (!element) {
+        throw new Error("결과 카드 요소를 찾을 수 없습니다.")
+      }
+
+      // Preload all images first
+      await preloadImages()
+
+      // Wait a bit for any pending renders
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      // Temporarily modify styles for better canvas rendering
+      const originalStyle = element.style.cssText
+      element.style.transform = "none"
+      element.style.position = "relative"
+      element.style.zIndex = "9999"
+
+      // Create canvas with enhanced options
       const canvas = await html2canvas(element, {
-        backgroundColor: null,
+        backgroundColor: "#749665",
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         logging: false,
         width: element.offsetWidth,
         height: element.offsetHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: element.offsetWidth,
+        windowHeight: element.offsetHeight,
+        onclone: (clonedDoc) => {
+          // Ensure fonts are loaded in the cloned document
+          const style = clonedDoc.createElement("style")
+          style.textContent = `
+            @font-face {
+              font-family: "MoneyGraphy";
+              src: url("/fonts/Moneygraphy-Rounded.ttf") format("truetype");
+            }
+            @font-face {
+              font-family: "TmoneyRoundWind";
+              src: url("/fonts/TmoneyRoundWindRegular.ttf") format("truetype");
+            }
+            * {
+              font-family: "MoneyGraphy", "TmoneyRoundWind", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+            }
+            .w-10.h-10 {
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+            }
+            .w-10.h-10 span {
+              line-height: 1 !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              height: 100% !important;
+              width: 100% !important;
+            }
+            .rounded-full span {
+              display: inline-flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              line-height: 1.2 !important;
+            }
+          `
+          clonedDoc.head.appendChild(style)
+
+          // Fix image sources in cloned document
+          const images = clonedDoc.querySelectorAll("img")
+          images.forEach((img) => {
+            if (img.src.startsWith("/")) {
+              img.src = window.location.origin + img.src
+            }
+          })
+        },
       })
 
+      // Restore original styles
+      element.style.cssText = originalStyle
+
+      // Validate canvas
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error("캔버스 생성에 실패했습니다.")
+      }
+
       // Convert to blob and download
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement("a")
-          link.download = `${duckType.name}_결과.png`
-          link.href = url
-          link.click()
-          URL.revokeObjectURL(url)
-        }
-      }, "image/png")
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, "image/png", 1.0)
+      })
+
+      if (!blob) {
+        throw new Error("이미지 변환에 실패했습니다.")
+      }
+
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.download = `${duckType.name}_결과_${new Date().getTime()}.png`
+      link.href = url
+      link.style.display = "none"
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Clean up
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+
+      // Show success message
+      alert("이미지가 성공적으로 저장되었습니다!")
     } catch (error) {
       console.error("이미지 저장 실패:", error)
-      alert("이미지 저장에 실패했습니다.")
+
+      // Track error
+      gtag.event({
+        action: "save_image_error",
+        category: "error",
+        label: error instanceof Error ? error.message : "Unknown error",
+      })
+
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
+      alert(`이미지 저장에 실패했습니다: ${errorMessage}\n\n다시 시도해주세요.`)
+    } finally {
+      setIsGeneratingImage(false)
     }
   }
 
@@ -192,7 +317,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
         <div
           ref={resultCardRef}
           data-result-card
-          className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg relative mx-0 py-[24x]"
+          className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg relative mx-0 image-capture-card"
           style={{
             minWidth: "320px",
             maxWidth: "480px",
@@ -207,7 +332,8 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               {duckType.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-black"
+                  className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-black inline-flex items-center justify-center"
+                  style={{ lineHeight: "1.2" }}
                 >
                   #{tag}
                 </span>
@@ -230,6 +356,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                     transform: "scale(1.2)",
                     transformOrigin: "center center",
                   }}
+                  crossOrigin="anonymous"
                   onError={(e) => {
                     console.warn("Failed to load duck image in UI:", duckImages[duckType.name])
                     e.currentTarget.src = "/placeholder.svg?height=200&width=200&text=🦆"
@@ -241,10 +368,14 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             {/* Personality circles */}
             <div className="flex justify-center gap-2">
               <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white text-lg font-bold">성</span>
+                <span className="text-white text-lg font-bold leading-none flex items-center justify-center h-full w-full">
+                  성
+                </span>
               </div>
               <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white text-lg font-bold">격</span>
+                <span className="text-white text-lg font-bold leading-none flex items-center justify-center h-full w-full">
+                  격
+                </span>
               </div>
             </div>
           </div>
@@ -275,22 +406,22 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   나
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   의
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   매
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   력
                 </span>
               </div>
@@ -302,7 +433,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 {duckType.strengths.slice(0, 3).map((strength, index) => (
                   <span
                     key={index}
-                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border flex items-center justify-center"
+                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border inline-flex items-center justify-center"
                     style={{ lineHeight: "1.2" }}
                   >
                     {strength}
@@ -314,7 +445,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 {duckType.strengths.slice(3, 5).map((strength, index) => (
                   <span
                     key={index + 3}
-                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border flex items-center justify-center"
+                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border inline-flex items-center justify-center"
                     style={{ lineHeight: "1.2" }}
                   >
                     {strength}
@@ -328,22 +459,22 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white text-base font-black leading-none flex items-center justify-center h-full">
+                <span className="text-white text-base font-black leading-none flex items-center justify-center h-full w-full">
                   조
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   심
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   할
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   것
                 </span>
               </div>
@@ -352,7 +483,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               {duckType.weaknesses.slice(0, 5).map((weakness, index) => (
                 <span
                   key={index}
-                  className="bg-red-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border flex items-center justify-center"
+                  className="bg-red-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border inline-flex items-center justify-center"
                   style={{ lineHeight: "1.2" }}
                 >
                   {weakness}
@@ -365,22 +496,22 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   찰
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   떡
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   궁
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   합
                 </span>
               </div>
@@ -393,6 +524,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                       src={duckImages[compatibleType] || "/placeholder.svg?height=48&width=48&text=🦆"}
                       alt={compatibleType}
                       className="w-12 h-12 object-contain"
+                      crossOrigin="anonymous"
                       onError={(e) => {
                         e.currentTarget.src = "/placeholder.svg?height=48&width=48&text=🦆"
                       }}
@@ -403,7 +535,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                     {duckTypes[compatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
-                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black flex items-center justify-center"
+                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black inline-flex items-center justify-center"
                         style={{ lineHeight: "1.2" }}
                       >
                         #{tag}
@@ -422,17 +554,17 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   안
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   맞
                 </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
                   아
                 </span>
               </div>
@@ -445,6 +577,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                       src={duckImages[incompatibleType] || "/placeholder.svg?height=48&width=48&text=🦆"}
                       alt={incompatibleType}
                       className="w-12 h-12 object-contain"
+                      crossOrigin="anonymous"
                       onError={(e) => {
                         e.currentTarget.src = "/placeholder.svg?height=48&width=48&text=🦆"
                       }}
@@ -455,7 +588,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                     {duckTypes[incompatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
-                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black flex items-center justify-center"
+                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black inline-flex items-center justify-center"
                         style={{ lineHeight: "1.2" }}
                       >
                         #{tag}
@@ -474,17 +607,27 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           <div className="flex flex-col gap-4 mt-6">
             <Button
               onClick={handleSaveImage}
-              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base"
+              disabled={isGeneratingImage}
+              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              이미지로 저장하기
+              {isGeneratingImage ? (
+                <>
+                  <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  이미지 생성 중...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  이미지로 저장하기
+                </>
+              )}
             </Button>
 
             <Button

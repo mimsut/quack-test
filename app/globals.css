@@ -174,54 +174,108 @@
   }
 }
 
-/* Fix for html2canvas rendering */
-.result-card-capture {
+/* Enhanced styles for image capture */
+.image-capture-card {
   position: relative !important;
-  transform: none !important;
-  left: 0 !important;
-  top: 0 !important;
-  margin: 0 auto !important;
+  z-index: 1 !important;
 }
 
-/* Fix text alignment for PNG export */
-.result-card-capture span {
+.image-capture-card * {
+  box-sizing: border-box !important;
+}
+
+.image-capture-card img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+
+/* Fix text alignment for all rendering contexts */
+.image-capture-card .w-10.h-10 {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  line-height: 1.2 !important;
-  vertical-align: middle !important;
+  position: relative !important;
 }
 
-/* Ensure proper centering for circular containers */
-.result-card-capture .w-10.h-10 {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.result-card-capture .w-10.h-10 span {
-  margin: 0 !important;
-  padding: 0 !important;
+.image-capture-card .w-10.h-10 span {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
   line-height: 1 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 100% !important;
   width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Fix for tag spans in PNG export */
-.result-card-capture .rounded-full span {
+.image-capture-card .rounded-full span {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   line-height: 1.2 !important;
   vertical-align: middle !important;
+  position: static !important;
+  transform: none !important;
 }
 
-/* Ensure proper font rendering in canvas */
-@media print, (prefers-reduced-motion: reduce) {
-  * {
-    font-family: "MoneyGraphy", "TmoneyRoundWind", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+/* Ensure consistent font rendering */
+.image-capture-card * {
+  font-family: "MoneyGraphy", "TmoneyRoundWind", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Fix backdrop blur for image capture */
+.image-capture-card.bg-white\/80 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Ensure proper image loading */
+.image-capture-card img[crossorigin] {
+  crossorigin: anonymous !important;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Ensure proper text centering in circular elements */
+.w-12.h-12 span,
+.w-10.h-10 span,
+.w-16.h-16 span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Fix for inline-flex spans in tags */
+.rounded-full.inline-flex {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.rounded-full.inline-flex span {
+  position: static !important;
+  transform: none !important;
+  line-height: 1.2 !important;
 }
