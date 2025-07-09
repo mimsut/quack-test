@@ -143,7 +143,7 @@ export function ResultImageGenerator({ duckType }: ResultImageGeneratorProps) {
         // Fallback to text sharing
         await navigator.share({
           title: `나는 ${duckType.name}!`,
-          text: `내 안의 꽥 테스트 결과: ${duckType.name} - ${duckType.tags.join(", ")}`,
+          text: `내 안의 꽥 테���트 결과: ${duckType.name} - ${duckType.tags.join(", ")}`,
           url: window.location.href,
         })
       }

@@ -1,10 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
-import ResultPage from "@/components/result-page"
-import { ChevronLeft } from "lucide-react"
 
 // Duck personality types data (same as before)
 const duckTypes = {
@@ -55,7 +51,7 @@ const duckTypes = {
       "바다비오리는 모든 것을 논리적으로 분석하는 냉철한 전략가입니다. 감정보다는 팩트와 데이터를 중시하고, '그게 합리적인 선택이야?'가 입버릇이에요. 친구들의 고민 상담을 들어줄 때도 감정적 위로보다는 현실적인 해결책을 제시하죠. '울지 말고 이렇게 해봐'라고 말하지만, 정작 본인도 속으로는 '내가 너무 차갑게 말한 건 아닐까?' 걱정합니다. 토론을 좋아하고 새로운 지식을 습득하는 걸 즐기지만, 가끔 '인간미가 부족하다'는 소리를 들어서 서운해해요.",
     strengths: ["논리적 사고", "분석력", "설득력", "집중력", "문제해결력"],
     weaknesses: ["감정표현 부족", "융통성 부족", "사회적 거리감", "완고함", "고립감"],
-    compatible: ["알��오리", "혹부리오리"],
+    compatible: ["알락오리", "혹부리오리"],
     incompatible: ["비오리", "호사비오리"],
   },
   호사비오리: {
@@ -92,7 +88,7 @@ const duckTypes = {
     name: "청둥오리",
     tags: ["유연함", "적응력"],
     description:
-      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 의견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 있으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
+      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 의견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
     strengths: ["적응력", "유연성", "회복력", "대인관계능력", "낙천성"],
     weaknesses: ["우유부단함", "집중력 부족", "반복에 취약", "산만함", "책임 회피"],
     compatible: ["점무늬오리", "홍머리오리"],
@@ -115,7 +111,7 @@ const duckTypes = {
       "홍머리오리는 '솔직함이 최고야!'를 신조로 사는 직설적인 화법의 소유자입니다. 생각나는 대로 말하고, 좋은 건 좋다, 싫은 건 싫다고 분명하게 표현해요. 친구가 이상한 옷을 입고 나오면 '그거 별로야'라고 바로 말하지만, 덕분에 친구들은 홍머리오리 앞에서만큼은 가식 없이 지낼 수 있죠. 하지만 가끔 너무 직설적인 말로 상대방에게 상처를 주기도 해서, 나중에 '내가 너무 심했나?'라며 후회하기도 합니다. 그래도 진심이 느껴지는 조언을 해주는 믿음직한 친구예요.",
     strengths: ["솔직함", "투명함", "결단력", "직관력", "용기"],
     weaknesses: ["과격함", "감정폭발", "융통성 부족", "공격성", "사회적 긴장"],
-    compatible: ["원앙", "청머리오리"],
+    compatible: ["원앙", "점무늬오리"],
     incompatible: ["비오리", "가창오리"],
   },
   알락오리: {
@@ -437,6 +433,33 @@ const questions = [
   },
 ]
 
+// Question image mapping - each image appears in 5 random questions
+const questionImageMapping: { [key: number]: string } = {
+  1: "/images/questions/question1.png",
+  4: "/images/questions/question1.png",
+  7: "/images/questions/question1.png",
+  10: "/images/questions/question1.png",
+  16: "/images/questions/question1.png",
+
+  2: "/images/questions/question2.png",
+  6: "/images/questions/question2.png",
+  9: "/images/questions/question2.png",
+  14: "/images/questions/question2.png",
+  18: "/images/questions/question2.png",
+
+  3: "/images/questions/question3.png",
+  8: "/images/questions/question3.png",
+  12: "/images/questions/question3.png",
+  15: "/images/questions/question3.png",
+  19: "/images/questions/question3.png",
+
+  5: "/images/questions/question4.png",
+  11: "/images/questions/question4.png",
+  13: "/images/questions/question4.png",
+  17: "/images/questions/question4.png",
+  20: "/images/questions/question4.png",
+}
+
 export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<string[]>([])
@@ -494,21 +517,115 @@ export default function Home() {
   }
 
   const getResult = () => {
-    const typeCounts: { [key: string]: number } = {}
-    answers.forEach((answer) => {
-      typeCounts[answer] = (typeCounts[answer] || 0) + 1
+    // Enhanced scoring system with weighted questions
+    const typeScores: { [key: string]: number } = {}
+
+    // Initialize all duck types with 0 score
+    Object.keys(duckTypes).forEach((type) => {
+      typeScores[type] = 0
     })
 
-    // 가장 많이 선택된 타입 찾기
-    let resultType = "청둥오리" // 기본값
-    let maxCount = 0
+    // Weight certain questions more heavily based on their importance
+    const questionWeights = [
+      1.2, // Question 1: Important presentation behavior
+      1.5, // Question 2: Problem-solving approach (very important)
+      1.3, // Question 3: Conflict resolution
+      1.0, // Question 4: Evening routine
+      1.4, // Question 5: Unexpected situations (important)
+      1.1, // Question 6: Dealing with sadness
+      1.0, // Question 7: When feeling good
+      1.3, // Question 8: Emotional expression (important)
+      1.1, // Question 9: When things take longer
+      1.5, // Question 10: Decision making (very important)
+      1.0, // Question 11: Cancelled plans
+      1.2, // Question 12: Thoughts when depressed
+      1.0, // Question 13: Social media behavior
+      1.0, // Question 14: Difficult time of day
+      1.1, // Question 15: After difficult day
+      1.2, // Question 16: How others see you
+      1.3, // Question 17: Emotional fluctuation (important)
+      1.1, // Question 18: When day goes differently
+      1.2, // Question 19: When someone doesn't contact
+      1.1, // Question 20: Bad mood days
+    ]
 
-    Object.keys(typeCounts).forEach((type) => {
-      if (typeCounts[type] > maxCount) {
-        maxCount = typeCounts[type]
+    // Calculate weighted scores
+    answers.forEach((answer, index) => {
+      const weight = questionWeights[index] || 1.0
+      typeScores[answer] = (typeScores[answer] || 0) + weight
+    })
+
+    // Find the type with highest score
+    let resultType = "청둥오리" // default fallback
+    let maxScore = 0
+
+    Object.entries(typeScores).forEach(([type, score]) => {
+      if (score > maxScore) {
+        maxScore = score
         resultType = type
       }
     })
+
+    // If there's a tie, use secondary characteristics to break it
+    if (maxScore > 0) {
+      const tiedTypes = Object.entries(typeScores)
+        .filter(([_, score]) => score === maxScore)
+        .map(([type, _]) => type)
+
+      if (tiedTypes.length > 1) {
+        // Use personality trait compatibility to break ties
+        const traitPreferences = {
+          social: 0,
+          analytical: 0,
+          creative: 0,
+          stable: 0,
+          leadership: 0,
+        }
+
+        // Analyze answers for trait preferences
+        answers.forEach((answer, index) => {
+          const question = questions[index]
+          const selectedOption = question.options.find((opt) => opt.type === answer)
+
+          if (selectedOption) {
+            // Categorize answers by traits
+            if (answer === "원앙" || answer === "쇠오리" || answer === "홍머리오리") {
+              traitPreferences.social += 1
+            }
+            if (answer === "바다비오리" || answer === "알락오리" || answer === "고방오리") {
+              traitPreferences.analytical += 1
+            }
+            if (answer === "청머리오리" || answer === "흰뺨오리" || answer === "호사비오리") {
+              traitPreferences.creative += 1
+            }
+            if (answer === "흰등오리" || answer === "넓적부리" || answer === "점무늬오리") {
+              traitPreferences.stable += 1
+            }
+            if (answer === "혹부리오리" || answer === "쇠오리") {
+              traitPreferences.leadership += 1
+            }
+          }
+        })
+
+        // Select the tied type that best matches dominant traits
+        const dominantTrait = Object.entries(traitPreferences).sort(([, a], [, b]) => b - a)[0][0]
+
+        const traitTypeMap = {
+          social: ["원앙", "쇠오리", "홍머리오리"],
+          analytical: ["바다비오리", "알락오리", "고방오리"],
+          creative: ["청머리오리", "흰뺨오리", "호사비오리"],
+          stable: ["흰등오리", "넓적부리", "점무늬오리"],
+          leadership: ["혹부리오리", "쇠오리"],
+        }
+
+        const preferredTypes = traitTypeMap[dominantTrait as keyof typeof traitTypeMap]
+        const matchingType = tiedTypes.find((type) => preferredTypes.includes(type))
+
+        if (matchingType) {
+          resultType = matchingType
+        }
+      }
+    }
 
     return duckTypes[resultType as keyof typeof duckTypes] || duckTypes["청둥오리"]
   }
@@ -528,9 +645,12 @@ export default function Home() {
       <div className="min-h-screen px-4 py-6" style={{ backgroundColor: "#749665" }}>
         <div className="max-w-sm mx-auto">
           <div className="mb-4">
-            <Button onClick={handleBackToAllTypes} className="bg-white/30 hover:bg-white/50 text-white">
+            <button
+              onClick={handleBackToAllTypes}
+              className="bg-white/30 hover:bg-white/50 text-white px-4 py-2 rounded-lg"
+            >
               ← 모든 유형으로 돌아가기
-            </Button>
+            </button>
           </div>
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
             <div className="text-center mb-4">
@@ -587,9 +707,12 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-4">모든 오리 유형</h1>
-            <Button onClick={() => setShowAllTypes(false)} className="bg-[#779966] hover:bg-[#6a8659]">
+            <button
+              onClick={() => setShowAllTypes(false)}
+              className="bg-[#779966] hover:bg-[#6a8659] text-white px-6 py-2 rounded-lg"
+            >
               돌아가기
-            </Button>
+            </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.values(duckTypes).map((duck) => (
@@ -638,20 +761,19 @@ export default function Home() {
               maxLength={10}
             />
             <div className="space-y-3">
-              <Button
+              <button
                 onClick={handleNicknameSubmit}
                 disabled={!username.trim()}
                 className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-3 text-lg rounded-full font-bold disabled:opacity-50"
               >
                 테스트 시작하기
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={() => setShowNicknameInput(false)}
-                variant="ghost"
-                className="w-full text-gray-600 py-3 text-lg rounded-full font-bold"
+                className="w-full text-gray-600 py-3 text-lg rounded-full font-bold hover:bg-gray-100"
               >
                 돌아가기
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -663,6 +785,7 @@ export default function Home() {
   if (testStarted && !showResult) {
     const question = questions[currentQuestion]
     const progress = ((currentQuestion + 1) / questions.length) * 100
+    const questionImage = questionImageMapping[question.id]
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#E8F5E8] to-[#D4E8D4] px-4 py-8">
@@ -670,27 +793,44 @@ export default function Home() {
           {/* Header with back button */}
           <div className="mb-8">
             <div className="flex items-center mb-4">
-              <Button onClick={handleGoBack} variant="ghost" size="sm" className="p-2 hover:bg-[#779966]/20">
-                <ChevronLeft className="w-6 h-6 text-[#779966]" />
-              </Button>
+              <button onClick={handleGoBack} className="p-2 hover:bg-[#779966]/20 rounded-lg">
+                <svg className="w-6 h-6 text-[#779966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
             </div>
-            <Progress value={progress} className="h-2" />
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-[#779966] h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
           </div>
 
           {/* Question */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">{question.question}</h2>
+            <h2 className="font-bold text-gray-800 mb-6 text-center text-base">{question.question}</h2>
+
+            {/* Question Image */}
+            {questionImage && (
+              <div className="flex justify-center mb-6 px-0 w-fit mx-auto">
+                <img
+                  src={questionImage || "/placeholder.svg"}
+                  alt="Question illustration"
+                  className="w-auto h-24 object-contain"
+                />
+              </div>
+            )}
 
             <div className="space-y-3">
               {question.options.map((option, index) => (
-                <Button
+                <button
                   key={index}
                   onClick={() => handleAnswer(option.type)}
-                  variant="outline"
-                  className="w-full text-left justify-start h-auto py-4 px-4 border-2 border-gray-200 hover:border-[#779966] hover:bg-[#779966]/10 text-gray-700 hover:text-gray-800"
+                  className="w-full text-left justify-start h-auto py-4 px-4 border-2 border-gray-200 hover:border-[#779966] hover:bg-[#779966]/10 text-gray-700 hover:text-gray-800 rounded-lg transition-all"
                 >
                   {option.text}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
@@ -701,6 +841,7 @@ export default function Home() {
 
   // Show result page
   if (showResult) {
+    const ResultPage = require("@/components/result-page").default
     return (
       <ResultPage
         duckType={getResult()}
@@ -767,7 +908,7 @@ export default function Home() {
             onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
             className="w-full hover:bg-[#86A276] text-white py-4 px-6 rounded-full text-lg font-bold border-2 border-white shadow-lg transition-all duration-300 bg-[#9BB88A] hover:shadow-xl hover:scale-105"
           >
-            멘탈케어 게임 오리의 꿈 사전예약 하기
+            멘탈케어 게임 오리의 꿈 사전예약
           </button>
         </div>
       </div>

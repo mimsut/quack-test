@@ -1,7 +1,8 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { ShareIcon, RotateCcw, Eye, Download } from "lucide-react"
+import { ShareIcon, Eye } from "lucide-react"
 import { useRef } from "react"
+// Note: You need to install html2canvas: npm install html2canvas @types/html2canvas
 
 interface ResultPageProps {
   duckType: {
@@ -35,7 +36,7 @@ const duckImages: { [key: string]: string } = {
   혹부리오리: "/images/ducks/혹부리오리.png",
   황오리: "/images/ducks/황오리.png",
   흰등오리: "/images/ducks/흰등오리.png",
-  흰뺨검둥오리: "/images/ducks/흰뺨검둥오리.png",
+  흰뺨검둥오리: "/images/ducks/흰뺨오리.png",
   흰뺨오리: "/images/ducks/흰뺨오리.png",
   흰죽지: "/images/ducks/흰죽지.png",
   넓적부리: "/images/ducks/넓적부리.png",
@@ -95,7 +96,7 @@ const duckSummaries = {
   혹부리오리: "강한 결단력과 카리스마로 팀을 이끄는 천상의 리더",
   황오리: "밝은 에너지와 긍정적 마인드로 주변을 환하게 만드는 비타민",
   흰등오리: "차분한 안정감으로 든든한 버팀목이 되어주는 신뢰의 상징",
-  흰뺨검둥오리: "따한 공감과 친절함으로 모든 이를 포용하는 천사",
+  흰뺨검둥오리: "따뜻한 공감과 친절함으로 모든 이를 포용하는 천사",
   흰뺨오리: "무한한 상상력과 창의성으로 새로운 세계를 그려내는 아티스트",
   흰죽지: "독립적이고 자기주도적으로 자신만의 길을 개척하는 개척자",
   넓적부리: "여유로운 마음으로 평화롭게 살아가는 자연주의자",
@@ -104,85 +105,16 @@ const duckSummaries = {
 export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: ResultPageProps) {
   const resultCardRef = useRef<HTMLDivElement>(null)
 
-  const handleSaveImage = async () => {
-    if (!resultCardRef.current) return
-
-    try {
-      // DOM을 canvas로 변환하는 대신 직접 canvas에 그리기
-      const canvas = document.createElement("canvas")
-      const ctx = canvas.getContext("2d")
-      if (!ctx) return
-
-      canvas.width = 400
-      canvas.height = 600
-
-      // 배경색 설정
-      ctx.fillStyle = "#ffffff"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      // 텍스트 설정
-      ctx.fillStyle = "#333333"
-      ctx.font = "bold 24px Arial, sans-serif"
-      ctx.textAlign = "center"
-
-      // 제목 그리기
-      ctx.fillText(`${username || "당신"}의 꽥은`, canvas.width / 2, 50)
-      ctx.font = "bold 32px Arial, sans-serif"
-      ctx.fillText(duckType.name, canvas.width / 2, 90)
-
-      // 태그 그리기
-      ctx.font = "16px Arial, sans-serif"
-      const tagsText = duckType.tags.map((tag) => `#${tag}`).join(" ")
-      ctx.fillText(tagsText, canvas.width / 2, 120)
-
-      // 오리 이미지 그리기
-      const img = new Image()
-      img.crossOrigin = "anonymous"
-      img.onload = () => {
-        ctx.drawImage(img, canvas.width / 2 - 60, 140, 120, 120)
-
-        // 설명 텍스트 그리기
-        ctx.font = "14px Arial, sans-serif"
-        ctx.textAlign = "left"
-        const words = duckType.description.split(" ")
-        let line = ""
-        let y = 300
-        const maxWidth = canvas.width - 40
-
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + " "
-          const metrics = ctx.measureText(testLine)
-          if (metrics.width > maxWidth && n > 0) {
-            ctx.fillText(line, 20, y)
-            line = words[n] + " "
-            y += 20
-          } else {
-            line = testLine
-          }
-        }
-        ctx.fillText(line, 20, y)
-
-        // 다운로드
-        const link = document.createElement("a")
-        link.download = `${username}_${duckType.name}_결과.png`
-        link.href = canvas.toDataURL()
-        link.click()
-      }
-      img.src = duckImages[duckType.name] || "/placeholder.svg"
-    } catch (error) {
-      console.error("이미지 저장 실패:", error)
-    }
-  }
-
   const handleShare = async () => {
-    const text = `나는 ${duckType.name}! 내 안의 꽥 테스트 결과: ${duckType.tags.join(", ")}`
+    const resultText = `🦆 나는 ${duckType.name}!\n\n${duckType.tags.map((tag) => `#${tag}`).join(" ")}\n\n${username || "나"}의 꽥 테스트 결과를 확인해보세요!`
+    const testUrl = window.location.origin
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: `나는 ${duckType.name}!`,
-          text: text,
-          url: window.location.href,
+          text: resultText,
+          url: testUrl,
         })
       } catch (error) {
         console.error("공유 실패:", error)
@@ -190,7 +122,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
     } else {
       // 클립보드에 복사
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text + " " + window.location.href)
+        await navigator.clipboard.writeText(`${resultText}\n\n테스트 해보기: ${testUrl}`)
         alert("결과가 클립보드에 복사되었습니다!")
       }
     }
@@ -214,7 +146,16 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
         </div>
 
         {/* Main Card */}
-        <div ref={resultCardRef} className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+        <div
+          ref={resultCardRef}
+          data-result-card
+          className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg relative mx-0"
+          style={{
+            minWidth: "320px",
+            maxWidth: "480px",
+            margin: "0 auto",
+          }}
+        >
           {/* Title */}
           <div className="text-center mb-4">
             <h2 className="text-lg font-bold text-gray-700 mb-2">{username || "당신"}의 꽥은</h2>
@@ -231,14 +172,22 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </div>
           </div>
 
-          {/* Duck Character */}
+          {/* Duck Character - Full width prominent display with dynamic scaling */}
           <div className="flex flex-col items-center mb-6">
-            <div className="relative mb-4">
-              <div className="h-56 rounded-full border-4 flex items-center justify-center bg-transparent border-transparent my-[-34px] w-[265px]">
+            <div className="relative mb-4 w-full flex justify-center">
+              <div className="h-64 flex items-center justify-center my-[-52px] w-full">
                 <img
-                  src={duckImages[duckType.name] || "/placeholder.svg"}
+                  src={duckImages[duckType.name] || "/placeholder.svg?height=200&width=200&text=Duck"}
                   alt={duckType.name}
-                  className="w-48 h-48 object-contain"
+                  className="w-48 h-48 object-contain transition-transform duration-300 hover:scale-110"
+                  style={{
+                    transform: "scale(1.2)",
+                    transformOrigin: "center center",
+                  }}
+                  onError={(e) => {
+                    console.warn("Failed to load duck image in UI:", duckImages[duckType.name])
+                    e.currentTarget.src = "/placeholder.svg?height=200&width=200&text=🦆"
+                  }}
                 />
               </div>
             </div>
@@ -276,7 +225,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               .reduce((prev, curr, index) => [prev, " ", curr])}
           </div>
 
-          {/* My charm section */}
+          {/* My charm section - Two line layout */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
@@ -292,15 +241,30 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 <span className="text-white font-bold text-base">력</span>
               </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-2 flex-row items-start py-[px] my-0 mb-0">
-              {duckType.strengths.slice(0, 5).map((strength, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
-                >
-                  {strength}
-                </span>
-              ))}
+            {/* Two-line layout for keywords */}
+            <div className="flex flex-col items-center gap-2">
+              {/* First line - 3 keywords */}
+              <div className="flex justify-center gap-2">
+                {duckType.strengths.slice(0, 3).map((strength, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
+                  >
+                    {strength}
+                  </span>
+                ))}
+              </div>
+              {/* Second line - 2 keywords */}
+              <div className="flex justify-center gap-2">
+                {duckType.strengths.slice(3, 5).map((strength, index) => (
+                  <span
+                    key={index + 3}
+                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
+                  >
+                    {strength}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -348,18 +312,21 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 <span className="text-white font-bold text-base">합</span>
               </div>
             </div>
-            <div className="flex justify-center items-center gap-6">
+            <div className="flex justify-center items-start gap-4">
               {duckType.compatible.slice(0, 2).map((compatibleType, index) => (
-                <div key={index} className="text-center flex flex-col items-center">
+                <div key={index} className="text-center flex flex-col items-center max-w-[140px]">
                   <div className="bg-blue-200/50 rounded-full border-blue-400 flex items-center justify-center mb-2 border-2 size-auto w-16 h-16">
                     <img
-                      src={duckImages[compatibleType] || "/placeholder.svg"}
+                      src={duckImages[compatibleType] || "/placeholder.svg?height=48&width=48&text=🦆"}
                       alt={compatibleType}
                       className="w-12 h-12 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg?height=48&width=48&text=🦆"
+                      }}
                     />
                   </div>
                   <div className="text-sm font-bold text-gray-800 mb-1">{compatibleType}</div>
-                  <div className="flex gap-1 justify-center mb-1">
+                  <div className="flex gap-1 justify-center mb-2 flex-wrap">
                     {duckTypes[compatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
@@ -368,6 +335,9 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                         #{tag}
                       </span>
                     ))}
+                  </div>
+                  <div className="text-xs text-gray-600 text-center leading-tight">
+                    {duckSummaries[compatibleType as keyof typeof duckSummaries]}
                   </div>
                 </div>
               ))}
@@ -387,18 +357,21 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 <span className="text-white font-bold text-base">아</span>
               </div>
             </div>
-            <div className="flex justify-center items-center gap-6">
+            <div className="flex justify-center items-start gap-4">
               {duckType.incompatible.slice(0, 2).map((incompatibleType, index) => (
-                <div key={index} className="text-center flex flex-col items-center">
+                <div key={index} className="text-center flex flex-col items-center max-w-[140px]">
                   <div className="w-16 h-16 bg-red-200/50 rounded-full border-red-400 flex items-center justify-center mb-2 border-2">
                     <img
-                      src={duckImages[incompatibleType] || "/placeholder.svg"}
+                      src={duckImages[incompatibleType] || "/placeholder.svg?height=48&width=48&text=🦆"}
                       alt={incompatibleType}
                       className="w-12 h-12 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg?height=48&width=48&text=🦆"
+                      }}
                     />
                   </div>
                   <div className="text-sm font-bold text-gray-800 mb-1">{incompatibleType}</div>
-                  <div className="flex gap-1 justify-center">
+                  <div className="flex gap-1 justify-center mb-2 flex-wrap">
                     {duckTypes[incompatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
@@ -408,6 +381,9 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                       </span>
                     ))}
                   </div>
+                  <div className="text-xs text-gray-600 text-center leading-tight">
+                    {duckSummaries[incompatibleType as keyof typeof duckSummaries]}
+                  </div>
                 </div>
               ))}
             </div>
@@ -415,14 +391,6 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
 
           {/* Buttons */}
           <div className="flex flex-col gap-4 mt-6">
-            <Button
-              onClick={handleSaveImage}
-              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-center text-base"
-            >
-              <Download className="mr-2 size-5" />
-              이미지 저장하기
-            </Button>
-
             <Button
               onClick={onViewAllTypes}
               className="w-full bg-white/30 hover:bg-white/50 text-black py-4 rounded-full font-bold shadow-lg border-2 border-white backdrop-blur-sm text-base"
@@ -451,7 +419,6 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               variant="ghost"
               className="w-full py-4 rounded-full font-bold underline hover:bg-white/10 text-base text-black"
             >
-              <RotateCcw className="w-5 h-5 mr-2" />
               테스트 다시하기
             </Button>
           </div>
