@@ -2,7 +2,8 @@
 import { Button } from "@/components/ui/button"
 import { ShareIcon, Eye } from "lucide-react"
 import { useRef } from "react"
-// Note: You need to install html2canvas: npm install html2canvas @types/html2canvas
+import html2canvas from "html2canvas"
+import * as gtag from "@/lib/gtag"
 
 interface ResultPageProps {
   duckType: {
@@ -65,20 +66,6 @@ const duckTypes = {
   넓적부리: { name: "넓적부리", tags: ["여유", "평화형"] },
 }
 
-const compatibilityDescriptions = {
-  가창오리: {
-    compatible: {
-      홍머리오리: "솔직한 홍머리오리가 가창오리의 진심을 끌어내줘요",
-      청둥오리: "유연한 청둥오리가 가창오리의 신중함을 이해해줘요",
-    },
-    incompatible: {
-      쇠오리: "적극적인 쇠오리가 가창오리에게는 부담스러울 수 있어요",
-      발구지: "즉흥적인 발구지와는 속도 차이가 날 수 있어요",
-    },
-  },
-  // ... 다른 유형들도 추가
-}
-
 const duckSummaries = {
   가창오리: "조용히 관찰하며 신중하게 행동하는 깊이 있는 사색가",
   고방오리: "체계적인 계획으로 모든 일을 완벽하게 처리하는 전략가",
@@ -106,6 +93,13 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
   const resultCardRef = useRef<HTMLDivElement>(null)
 
   const handleShare = async () => {
+    // Track share action
+    gtag.event({
+      action: "share_result",
+      category: "social",
+      label: duckType.name,
+    })
+
     const resultText = `🦆 나는 ${duckType.name}!\n\n${duckType.tags.map((tag) => `#${tag}`).join(" ")}\n\n${username || "나"}의 꽥 테스트 결과를 확인해보세요!`
     const testUrl = window.location.origin
 
@@ -126,6 +120,55 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
         alert("결과가 클립보드에 복사되었습니다!")
       }
     }
+  }
+
+  const handleSaveImage = async () => {
+    // Track image save action
+    gtag.event({
+      action: "save_image",
+      category: "engagement",
+      label: duckType.name,
+    })
+
+    const element = resultCardRef.current
+    if (!element) return
+
+    try {
+      // Create canvas from the result card
+      const canvas = await html2canvas(element, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+      })
+
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement("a")
+          link.download = `${duckType.name}_결과.png`
+          link.href = url
+          link.click()
+          URL.revokeObjectURL(url)
+        }
+      }, "image/png")
+    } catch (error) {
+      console.error("이미지 저장 실패:", error)
+      alert("이미지 저장에 실패했습니다.")
+    }
+  }
+
+  const handlePreorderClick = () => {
+    // Track preorder button click
+    gtag.event({
+      action: "click_preorder_result",
+      category: "conversion",
+      label: "preorder_from_result",
+    })
   }
 
   return (
@@ -157,7 +200,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           }}
         >
           {/* Title */}
-          <div className="text-center mb-4">
+          <div className="text-center my-0 mb-[50px]">
             <h2 className="text-lg font-bold text-gray-700 mb-2">{username || "당신"}의 꽥은</h2>
             <h1 className="text-4xl font-bold text-gray-800 mb-3">{duckType.name}</h1>
             <div className="flex justify-center gap-2 mb-4">
@@ -175,7 +218,10 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           {/* Duck Character - Full width prominent display with dynamic scaling */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-4 w-full flex justify-center">
-              <div className="flex items-center justify-center w-fit h-fit my-0 mb-0">
+              <div
+                className="flex items-center justify-center w-fit h-fit my-10 mb-[60px]"
+                style={{ transform: "scale(2)" }}
+              >
                 <img
                   src={duckImages[duckType.name] || "/placeholder.svg?height=200&width=200&text=Duck"}
                   alt={duckType.name}
@@ -225,20 +271,28 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               .reduce((prev, curr, index) => [prev, " ", curr])}
           </div>
 
-          {/* My charm section - Two line layout */}
+          {/* My charm section - Two line layout with fixed text alignment */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">나</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  나
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">의</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  의
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">매</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  매
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">력</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  력
+                </span>
               </div>
             </div>
             {/* Two-line layout for keywords */}
@@ -248,7 +302,8 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 {duckType.strengths.slice(0, 3).map((strength, index) => (
                   <span
                     key={index}
-                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
+                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border flex items-center justify-center"
+                    style={{ lineHeight: "1.2" }}
                   >
                     {strength}
                   </span>
@@ -259,7 +314,8 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 {duckType.strengths.slice(3, 5).map((strength, index) => (
                   <span
                     key={index + 3}
-                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
+                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border flex items-center justify-center"
+                    style={{ lineHeight: "1.2" }}
                   >
                     {strength}
                   </span>
@@ -268,27 +324,36 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </div>
           </div>
 
-          {/* Caution section */}
+          {/* Caution section with fixed text alignment */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white text-base font-black">조</span>
+                <span className="text-white text-base font-black leading-none flex items-center justify-center h-full">
+                  조
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">심</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  심
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">할</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  할
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">것</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  것
+                </span>
               </div>
             </div>
             <div className="flex flex-wrap justify-center gap-2 mb-10">
               {duckType.weaknesses.slice(0, 5).map((weakness, index) => (
                 <span
                   key={index}
-                  className="bg-red-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
+                  className="bg-red-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border flex items-center justify-center"
+                  style={{ lineHeight: "1.2" }}
                 >
                   {weakness}
                 </span>
@@ -296,20 +361,28 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </div>
           </div>
 
-          {/* Compatible section */}
+          {/* Compatible section with fixed text alignment */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">찰</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  찰
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">떡</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  떡
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">궁</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  궁
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">합</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  합
+                </span>
               </div>
             </div>
             <div className="flex justify-center items-start gap-4 mb-10">
@@ -330,7 +403,8 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                     {duckTypes[compatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
-                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black"
+                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black flex items-center justify-center"
+                        style={{ lineHeight: "1.2" }}
                       >
                         #{tag}
                       </span>
@@ -344,20 +418,26 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </div>
           </div>
 
-          {/* Incompatible section */}
+          {/* Incompatible section with fixed text alignment */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">안</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  안
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">맞</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  맞
+                </span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base">아</span>
+                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full">
+                  아
+                </span>
               </div>
             </div>
-            <div className="flex justify-center items-start gap-4">
+            <div className="flex justify-center items-start gap-4 mb-10">
               {duckType.incompatible.slice(0, 2).map((incompatibleType, index) => (
                 <div key={index} className="text-center flex flex-col items-center max-w-[140px]">
                   <div className="w-16 h-16 bg-red-200/50 rounded-full border-red-400 flex items-center justify-center mb-2 border-2">
@@ -375,7 +455,8 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                     {duckTypes[incompatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
-                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black"
+                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black flex items-center justify-center"
+                        style={{ lineHeight: "1.2" }}
                       >
                         #{tag}
                       </span>
@@ -391,6 +472,21 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
 
           {/* Buttons */}
           <div className="flex flex-col gap-4 mt-6">
+            <Button
+              onClick={handleSaveImage}
+              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              이미지로 저장하기
+            </Button>
+
             <Button
               onClick={onViewAllTypes}
               className="w-full bg-white/30 hover:bg-white/50 text-black py-4 rounded-full font-bold shadow-lg border-2 border-white backdrop-blur-sm text-base"
@@ -408,7 +504,10 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </Button>
 
             <Button
-              onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
+              onClick={() => {
+                handlePreorderClick()
+                window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")
+              }}
               className="w-full bg-[#9BB88A] hover:bg-[#86A276] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base"
             >
               오리의 꿈 사전예약 하러가기
@@ -417,7 +516,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             <Button
               onClick={onRestart}
               variant="ghost"
-              className="w-full py-4 rounded-full font-bold underline hover:bg-white/10 text-base text-black"
+              className="w-full py-4 rounded-full underline hover:bg-white/10 text-black text-sm font-extralight"
             >
               테스트 다시하기
             </Button>

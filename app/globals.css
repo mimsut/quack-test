@@ -182,3 +182,46 @@
   top: 0 !important;
   margin: 0 auto !important;
 }
+
+/* Fix text alignment for PNG export */
+.result-card-capture span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure proper centering for circular containers */
+.result-card-capture .w-10.h-10 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.result-card-capture .w-10.h-10 span {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Fix for tag spans in PNG export */
+.result-card-capture .rounded-full span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure proper font rendering in canvas */
+@media print, (prefers-reduced-motion: reduce) {
+  * {
+    font-family: "MoneyGraphy", "TmoneyRoundWind", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+  }
+}

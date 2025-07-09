@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import ResultPage from "@/components/result-page"
+import * as gtag from "@/lib/gtag"
 
 // Duck personality types data (same as before)
 const duckTypes = {
@@ -471,13 +472,34 @@ export default function Home() {
   const [showNicknameInput, setShowNicknameInput] = useState(false)
   const [selectedDuckDetail, setSelectedDuckDetail] = useState<string | null>(null)
 
+  // Track page views
+  useEffect(() => {
+    gtag.pageview(window.location.pathname)
+  }, [])
+
   const handleAnswer = (answerType: string) => {
+    // Track answer selection
+    gtag.event({
+      action: "answer_question",
+      category: "quiz",
+      label: `question_${currentQuestion + 1}_${answerType}`,
+      value: currentQuestion + 1,
+    })
+
     const newAnswers = [...answers, answerType]
     setAnswers(newAnswers)
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
     } else {
+      // Track quiz completion
+      gtag.event({
+        action: "complete_quiz",
+        category: "quiz",
+        label: "quiz_completed",
+        value: questions.length,
+      })
+
       // 마지막 질문 완료 - 바로 결과 페이지로 이동
       setTimeout(() => {
         setShowResult(true)
@@ -486,6 +508,13 @@ export default function Home() {
   }
 
   const handleRestart = () => {
+    // Track restart action
+    gtag.event({
+      action: "restart_quiz",
+      category: "navigation",
+      label: "restart_button",
+    })
+
     setCurrentQuestion(0)
     setAnswers([])
     setShowResult(false)
@@ -494,21 +523,49 @@ export default function Home() {
   }
 
   const handleStartTest = () => {
+    // Track test start
+    gtag.event({
+      action: "start_quiz",
+      category: "engagement",
+      label: "start_button",
+    })
+
     setShowNicknameInput(true)
   }
 
   const handleNicknameSubmit = () => {
     if (username.trim()) {
+      // Track nickname submission
+      gtag.event({
+        action: "submit_nickname",
+        category: "form",
+        label: "nickname_form",
+      })
+
       setTestStarted(true)
       setShowNicknameInput(false)
     }
   }
 
   const handleViewAllTypes = () => {
+    // Track view all types action
+    gtag.event({
+      action: "view_all_types",
+      category: "navigation",
+      label: "view_all_types_button",
+    })
+
     setShowAllTypes(true)
   }
 
   const handleGoBack = () => {
+    // Track back navigation
+    gtag.event({
+      action: "go_back",
+      category: "navigation",
+      label: `question_${currentQuestion + 1}`,
+    })
+
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1)
       setAnswers(answers.slice(0, -1))
@@ -628,15 +685,47 @@ export default function Home() {
       }
     }
 
-    return duckTypes[resultType as keyof typeof duckTypes] || duckTypes["청둥오리"]
+    const result = duckTypes[resultType as keyof typeof duckTypes] || duckTypes["청둥오리"]
+
+    // Track quiz result
+    gtag.event({
+      action: "quiz_result",
+      category: "quiz",
+      label: result.name,
+    })
+
+    return result
   }
 
   const handleDuckClick = (duckName: string) => {
+    // Track duck detail view
+    gtag.event({
+      action: "view_duck_detail",
+      category: "navigation",
+      label: duckName,
+    })
+
     setSelectedDuckDetail(duckName)
   }
 
   const handleBackToAllTypes = () => {
+    // Track back to all types
+    gtag.event({
+      action: "back_to_all_types",
+      category: "navigation",
+      label: "back_button",
+    })
+
     setSelectedDuckDetail(null)
+  }
+
+  const handlePreorderClick = () => {
+    // Track preorder button click
+    gtag.event({
+      action: "click_preorder",
+      category: "conversion",
+      label: "preorder_button",
+    })
   }
 
   // Show individual duck detail
@@ -905,7 +994,10 @@ export default function Home() {
           </button>
 
           <button
-            onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
+            onClick={() => {
+              handlePreorderClick()
+              window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")
+            }}
             className="w-full hover:bg-[#86A276] text-white py-4 px-6 rounded-full text-lg font-bold border-2 border-white shadow-lg transition-all duration-300 bg-[#9BB88A] hover:shadow-xl hover:scale-105"
           >
             멘탈케어 게임 오리의 꿈 사전예약
