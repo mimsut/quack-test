@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import ResultPage from "@/components/result-page"
 
 // Duck personality types data (same as before)
 const duckTypes = {
@@ -88,7 +89,7 @@ const duckTypes = {
     name: "청둥오리",
     tags: ["유연함", "적응력"],
     description:
-      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 의견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
+      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 ���견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
     strengths: ["적응력", "유연성", "회복력", "대인관계능력", "낙천성"],
     weaknesses: ["우유부단함", "집중력 부족", "반복에 취약", "산만함", "책임 회피"],
     compatible: ["점무늬오리", "홍머리오리"],
@@ -809,15 +810,15 @@ export default function Home() {
 
           {/* Question */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
-            <h2 className="font-bold text-gray-800 mb-6 text-center text-base">{question.question}</h2>
+            <h2 className="font-bold text-gray-800 mb-6 text-center text-xl">{question.question}</h2>
 
             {/* Question Image */}
             {questionImage && (
-              <div className="flex justify-center mb-6 px-0 w-fit mx-auto">
+              <div className="flex justify-center mb-6 px-0 mx-auto flex-row size-full h-fit w-fit">
                 <img
                   src={questionImage || "/placeholder.svg"}
                   alt="Question illustration"
-                  className="w-auto h-24 object-contain"
+                  className="w-auto h-48 object-contain"
                 />
               </div>
             )}
@@ -841,7 +842,6 @@ export default function Home() {
 
   // Show result page
   if (showResult) {
-    const ResultPage = require("@/components/result-page").default
     return (
       <ResultPage
         duckType={getResult()}
