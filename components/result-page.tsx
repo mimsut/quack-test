@@ -157,7 +157,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           }}
         >
           {/* Title */}
-          <div className="text-center my-0 mb-[50px]">
+          <div className="text-center mb-4">
             <h2 className="text-lg font-bold text-gray-700 mb-2">{username || "당신"}의 꽥은</h2>
             <h1 className="text-4xl font-bold text-gray-800 mb-3">{duckType.name}</h1>
             <div className="flex justify-center gap-2 mb-4">
@@ -175,7 +175,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           {/* Duck Character - Full width prominent display with dynamic scaling */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-4 w-full flex justify-center">
-              <div className="flex items-center justify-center w-fit h-fit my-10 mb-[60px]" style={{ transform: "scale(2)" }}>
+              <div className="flex items-center justify-center w-fit h-fit my-0 mb-0">
                 <img
                   src={duckImages[duckType.name] || "/placeholder.svg?height=200&width=200&text=Duck"}
                   alt={duckType.name}
@@ -357,7 +357,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                 <span className="text-white font-bold text-base">아</span>
               </div>
             </div>
-            <div className="flex justify-center items-start gap-4 mb-10">
+            <div className="flex justify-center items-start gap-4">
               {duckType.incompatible.slice(0, 2).map((incompatibleType, index) => (
                 <div key={index} className="text-center flex flex-col items-center max-w-[140px]">
                   <div className="w-16 h-16 bg-red-200/50 rounded-full border-red-400 flex items-center justify-center mb-2 border-2">
@@ -417,7 +417,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             <Button
               onClick={onRestart}
               variant="ghost"
-              className="w-full py-4 rounded-full underline hover:bg-white/10 text-black text-sm font-extralight"
+              className="w-full py-4 rounded-full font-bold underline hover:bg-white/10 text-base text-black"
             >
               테스트 다시하기
             </Button>
