@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { Progress } from "@/components/ui/progress"
+import { Button } from "@/components/ui/button"
 import ResultPage from "@/components/result-page"
-import * as gtag from "@/lib/gtag"
+import { ChevronLeft } from "lucide-react"
 
 // Duck personality types data (same as before)
 const duckTypes = {
@@ -40,7 +42,7 @@ const duckTypes = {
     name: "비오리",
     tags: ["감성적", "섬세함"],
     description:
-      "비오리는 감정의 온도계 같은 존재입니다. 상대방의 기분이 조금만 안 좋아도 바로 알아채고 '괜찮아? 무슨 일 있어?'라고 물어보죠. 친구가 힘들어하면 밤새 전화를 받아주고, 기뻐하면 함께 기뻐해주는 천사 같은 존재예요. 하지만 루틴한 일상이 계속되면 답답해서 못 견디고, 갑자기 머리를 자르거나 새로운 취미를 시작하죠."
+      "비오리는 감정의 온도계 같은 존재입니다. 상대방의 기분이 조금만 안 좋아도 바로 알아채고 '괜찮아? 무슨 일 있어?'라고 물어보죠. 친구가 힘들어하면 밤새 전화를 받아주고, 기뻐하면 함께 기뻐해주는 천사 같은 존재예요. 하지만 루틴한 일상이 계속되면 답답해서 못 견디고, 갑자기 머리를 자르거나 새로운 취미를 시작하죠. 친구들은 발구지와 함께 있으면 '인생이 드라마틱해진다'고 말하지만, 가끔은 '좀 진정해...'라고 말리기도 해요.",
     strengths: ["공감력", "배려심", "섬세함", "경청", "조율능력"],
     weaknesses: ["감정 기복", "우울감", "자기희생", "소심함", "스트레스에 취약"],
     compatible: ["청둥오리", "점무늬오리"],
@@ -53,7 +55,7 @@ const duckTypes = {
       "바다비오리는 모든 것을 논리적으로 분석하는 냉철한 전략가입니다. 감정보다는 팩트와 데이터를 중시하고, '그게 합리적인 선택이야?'가 입버릇이에요. 친구들의 고민 상담을 들어줄 때도 감정적 위로보다는 현실적인 해결책을 제시하죠. '울지 말고 이렇게 해봐'라고 말하지만, 정작 본인도 속으로는 '내가 너무 차갑게 말한 건 아닐까?' 걱정합니다. 토론을 좋아하고 새로운 지식을 습득하는 걸 즐기지만, 가끔 '인간미가 부족하다'는 소리를 들어서 서운해해요.",
     strengths: ["논리적 사고", "분석력", "설득력", "집중력", "문제해결력"],
     weaknesses: ["감정표현 부족", "융통성 부족", "사회적 거리감", "완고함", "고립감"],
-    compatible: ["알락오리", "혹부리오리"],
+    compatible: ["알오리", "혹부리오리"],
     incompatible: ["비오리", "호사비오리"],
   },
   호사비오리: {
@@ -90,7 +92,7 @@ const duckTypes = {
     name: "청둥오리",
     tags: ["유연함", "적응력"],
     description:
-      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 의견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
+      "청둥오리는 물 흐르듯 자연스럽게 살아가는 적응의 달인입니다. 계획이 틀어져도 '뭐 어때, 이것도 나름 재밌네!'라며 웃어넘기고, 새로운 환경에도 금세 적응해. 스트레스를 받아도 하룻밤 자고 나면 언제 그랬냐는 듯 회복하는 놀라운 회복력을 가지고 있죠. 하지만 너무 유연해서 가끔은 '네 의견은 뭐야?'라는 질문에 당황하기도 해요. 친구들은 청둥오리와 함께 있으면 편안하다고 하지만, 가끔은 '좀 더 확실한 입장을 가져봐'라고 조언하기도 합니다.",
     strengths: ["적응력", "유연성", "회복력", "대인관계능력", "낙천성"],
     weaknesses: ["우유부단함", "집중력 부족", "반복에 취약", "산만함", "책임 회피"],
     compatible: ["점무늬오리", "홍머리오리"],
@@ -113,7 +115,7 @@ const duckTypes = {
       "홍머리오리는 '솔직함이 최고야!'를 신조로 사는 직설적인 화법의 소유자입니다. 생각나는 대로 말하고, 좋은 건 좋다, 싫은 건 싫다고 분명하게 표현해요. 친구가 이상한 옷을 입고 나오면 '그거 별로야'라고 바로 말하지만, 덕분에 친구들은 홍머리오리 앞에서만큼은 가식 없이 지낼 수 있죠. 하지만 가끔 너무 직설적인 말로 상대방에게 상처를 주기도 해서, 나중에 '내가 너무 심했나?'라며 후회하기도 합니다. 그래도 진심이 느껴지는 조언을 해주는 믿음직한 친구예요.",
     strengths: ["솔직함", "투명함", "결단력", "직관력", "용기"],
     weaknesses: ["과격함", "감정폭발", "융통성 부족", "공격성", "사회적 긴장"],
-    compatible: ["원앙", "점무늬오리"],
+    compatible: ["원앙", "청머리오리"],
     incompatible: ["비오리", "가창오리"],
   },
   알락오리: {
@@ -435,33 +437,6 @@ const questions = [
   },
 ]
 
-// Question image mapping - each image appears in 5 random questions
-const questionImageMapping: { [key: number]: string } = {
-  1: "/images/questions/question1.png",
-  4: "/images/questions/question1.png",
-  7: "/images/questions/question1.png",
-  10: "/images/questions/question1.png",
-  16: "/images/questions/question1.png",
-
-  2: "/images/questions/question2.png",
-  6: "/images/questions/question2.png",
-  9: "/images/questions/question2.png",
-  14: "/images/questions/question2.png",
-  18: "/images/questions/question2.png",
-
-  3: "/images/questions/question3.png",
-  8: "/images/questions/question3.png",
-  12: "/images/questions/question3.png",
-  15: "/images/questions/question3.png",
-  19: "/images/questions/question3.png",
-
-  5: "/images/questions/question4.png",
-  11: "/images/questions/question4.png",
-  13: "/images/questions/question4.png",
-  17: "/images/questions/question4.png",
-  20: "/images/questions/question4.png",
-}
-
 export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<string[]>([])
@@ -471,114 +446,45 @@ export default function Home() {
   const [username, setUsername] = useState("")
   const [showNicknameInput, setShowNicknameInput] = useState(false)
   const [selectedDuckDetail, setSelectedDuckDetail] = useState<string | null>(null)
-  const [selectedOption, setSelectedOption] = useState<number | null>(null)
 
-  // Track page views
-  useEffect(() => {
-    gtag.pageview(window.location.pathname)
-  }, [])
-
-  const handleAnswer = (answerType: string, optionIndex: number) => {
-    // Set visual selection
-    setSelectedOption(optionIndex)
-
-    // Track answer selection
-    gtag.event({
-      action: "answer_question",
-      category: "quiz",
-      label: `question_${currentQuestion + 1}_${answerType}`,
-      value: currentQuestion + 1,
-    })
-
+  const handleAnswer = (answerType: string) => {
     const newAnswers = [...answers, answerType]
     setAnswers(newAnswers)
 
-    // Reset selection state and move to next question after a brief delay
-    setTimeout(() => {
-      setSelectedOption(null) // Reset visual selection
-
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1)
-      } else {
-        // Track quiz completion
-        gtag.event({
-          action: "complete_quiz",
-          category: "quiz",
-          label: "quiz_completed",
-          value: questions.length,
-        })
-
-        // Complete quiz
-        setTimeout(() => {
-          setShowResult(true)
-        }, 500)
-      }
-    }, 300) // Brief delay to show selection feedback
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1)
+    } else {
+      // 마지막 질문 완료 - 바로 결과 페이지로 이동
+      setTimeout(() => {
+        setShowResult(true)
+      }, 500) // 약간의 딜레이 후 결과 표시
+    }
   }
 
   const handleRestart = () => {
-    // Track restart action
-    gtag.event({
-      action: "restart_quiz",
-      category: "navigation",
-      label: "restart_button",
-    })
-
     setCurrentQuestion(0)
     setAnswers([])
     setShowResult(false)
     setTestStarted(false)
     setShowAllTypes(false)
-    setSelectedOption(null) // Reset selection state
   }
 
   const handleStartTest = () => {
-    // Track test start
-    gtag.event({
-      action: "start_quiz",
-      category: "engagement",
-      label: "start_button",
-    })
-
     setShowNicknameInput(true)
   }
 
   const handleNicknameSubmit = () => {
     if (username.trim()) {
-      // Track nickname submission
-      gtag.event({
-        action: "submit_nickname",
-        category: "form",
-        label: "nickname_form",
-      })
-
       setTestStarted(true)
       setShowNicknameInput(false)
     }
   }
 
   const handleViewAllTypes = () => {
-    // Track view all types action
-    gtag.event({
-      action: "view_all_types",
-      category: "navigation",
-      label: "view_all_types_button",
-    })
-
     setShowAllTypes(true)
   }
 
   const handleGoBack = () => {
-    // Track back navigation
-    gtag.event({
-      action: "go_back",
-      category: "navigation",
-      label: `question_${currentQuestion + 1}`,
-    })
-
-    // Reset selection state
-    setSelectedOption(null)
-
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1)
       setAnswers(answers.slice(0, -1))
@@ -698,47 +604,15 @@ export default function Home() {
       }
     }
 
-    const result = duckTypes[resultType as keyof typeof duckTypes] || duckTypes["청둥오리"]
-
-    // Track quiz result
-    gtag.event({
-      action: "quiz_result",
-      category: "quiz",
-      label: result.name,
-    })
-
-    return result
+    return duckTypes[resultType as keyof typeof duckTypes] || duckTypes["청둥오리"]
   }
 
   const handleDuckClick = (duckName: string) => {
-    // Track duck detail view
-    gtag.event({
-      action: "view_duck_detail",
-      category: "navigation",
-      label: duckName,
-    })
-
     setSelectedDuckDetail(duckName)
   }
 
   const handleBackToAllTypes = () => {
-    // Track back to all types
-    gtag.event({
-      action: "back_to_all_types",
-      category: "navigation",
-      label: "back_button",
-    })
-
     setSelectedDuckDetail(null)
-  }
-
-  const handlePreorderClick = () => {
-    // Track preorder button click
-    gtag.event({
-      action: "click_preorder",
-      category: "conversion",
-      label: "preorder_button",
-    })
   }
 
   // Show individual duck detail
@@ -748,12 +622,9 @@ export default function Home() {
       <div className="min-h-screen px-4 py-6" style={{ backgroundColor: "#749665" }}>
         <div className="max-w-sm mx-auto">
           <div className="mb-4">
-            <button
-              onClick={handleBackToAllTypes}
-              className="bg-white/30 hover:bg-white/50 text-white px-4 py-2 rounded-lg"
-            >
+            <Button onClick={handleBackToAllTypes} className="bg-white/30 hover:bg-white/50 text-white">
               ← 모든 유형으로 돌아가기
-            </button>
+            </Button>
           </div>
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
             <div className="text-center mb-4">
@@ -810,12 +681,9 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-4">모든 오리 유형</h1>
-            <button
-              onClick={() => setShowAllTypes(false)}
-              className="bg-[#779966] hover:bg-[#6a8659] text-white px-6 py-2 rounded-lg"
-            >
+            <Button onClick={() => setShowAllTypes(false)} className="bg-[#779966] hover:bg-[#6a8659]">
               돌아가기
-            </button>
+            </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.values(duckTypes).map((duck) => (
@@ -864,19 +732,20 @@ export default function Home() {
               maxLength={10}
             />
             <div className="space-y-3">
-              <button
+              <Button
                 onClick={handleNicknameSubmit}
                 disabled={!username.trim()}
                 className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-3 text-lg rounded-full font-bold disabled:opacity-50"
               >
                 테스트 시작하기
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setShowNicknameInput(false)}
-                className="w-full text-gray-600 py-3 text-lg rounded-full font-bold hover:bg-gray-100"
+                variant="ghost"
+                className="w-full text-gray-600 py-3 text-lg rounded-full font-bold"
               >
                 돌아가기
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -888,7 +757,6 @@ export default function Home() {
   if (testStarted && !showResult) {
     const question = questions[currentQuestion]
     const progress = ((currentQuestion + 1) / questions.length) * 100
-    const questionImage = questionImageMapping[question.id]
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#E8F5E8] to-[#D4E8D4] px-4 py-8">
@@ -896,80 +764,29 @@ export default function Home() {
           {/* Header with back button */}
           <div className="mb-8">
             <div className="flex items-center mb-4">
-              <button
-                onClick={handleGoBack}
-                disabled={selectedOption !== null}
-                className="p-2 hover:bg-[#779966]/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="w-6 h-6 text-[#779966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              
+              <Button onClick={handleGoBack} variant="ghost" size="sm" className="p-2 hover:bg-[#779966]/20">
+                <ChevronLeft className="w-6 h-6 text-[#779966]" />
+              </Button>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-[#779966] h-2 rounded-full progress-bar" style={{ width: `${progress}%` }}></div>
-            </div>
+            <Progress value={progress} className="h-2" />
           </div>
 
           {/* Question */}
-          <div
-            className={`bg-white rounded-lg p-6 shadow-md mb-6 transition-all duration-300 ${selectedOption !== null ? "question-loading" : ""}`}
-          >
-            <h2 className="font-bold text-gray-800 mb-6 text-center text-lg">{question.question}</h2>
-
-            {/* Question Image */}
-            {questionImage && (
-              <div className="flex justify-center mb-6 px-0 mx-auto flex-row size-full h-fit w-fit">
-                <img
-                  src={questionImage || "/placeholder.svg"}
-                  alt="Question illustration"
-                  className="w-auto h-48 object-contain transition-opacity duration-300"
-                />
-              </div>
-            )}
+          <div className="bg-white rounded-lg p-6 shadow-md mb-6">
+            <h2 className="font-bold text-gray-800 mb-6 text-center text-base">{question.question}</h2>
 
             <div className="space-y-3">
               {question.options.map((option, index) => (
-                <button
+                <Button
                   key={index}
-                  onClick={() => handleAnswer(option.type, index)}
-                  disabled={selectedOption !== null}
-                  className={`option-button w-full text-left justify-start h-auto py-4 px-4 border-2 rounded-lg transition-all duration-200 ${
-                    selectedOption === index
-                      ? "border-[#779966] bg-[#779966] text-white shadow-lg transform scale-[0.98] option-selected"
-                      : selectedOption !== null
-                        ? "border-gray-200 text-gray-400 bg-gray-50 opacity-60"
-                        : "border-gray-200 hover:border-[#779966] hover:bg-[#779966]/10 text-gray-700 hover:text-gray-800"
-                  }`}
+                  onClick={() => handleAnswer(option.type)}
+                  variant="outline"
+                  className="w-full text-left justify-start h-auto py-4 px-4 border-2 border-gray-200 hover:border-[#779966] hover:bg-[#779966]/10 text-gray-700 hover:text-gray-800"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="flex-1">{option.text}</span>
-                    {selectedOption === index && (
-                      <div className="ml-2 flex-shrink-0 animate-pulse">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                </button>
+                  {option.text}
+                </Button>
               ))}
             </div>
-
-            {/* Loading indicator when option is selected */}
-            {selectedOption !== null && (
-              <div className="flex justify-center mt-4">
-                <div className="flex items-center text-[#779966] text-sm">
-                  <div className="w-4 h-4 border-2 border-[#779966] border-t-transparent rounded-full animate-spin mr-2"></div>
-                  다음 질문으로 이동 중...
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -1040,15 +857,7 @@ export default function Home() {
             내 안의 꽥 찾으러 가기
           </button>
 
-          <button
-            onClick={() => {
-              handlePreorderClick()
-              window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")
-            }}
-            className="w-full hover:bg-[#86A276] text-white py-4 px-6 rounded-full text-lg font-bold border-2 border-white shadow-lg transition-all duration-300 bg-[#9BB88A] hover:shadow-xl hover:scale-105"
-          >
-            멘탈케어 게임 오리의 꿈 사전예약
-          </button>
+          
         </div>
       </div>
     </div>

@@ -1,9 +1,9 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { ShareIcon, Eye } from 'lucide-react'
-import { useRef, useState } from "react"
+import { ShareIcon, Eye, Download } from "lucide-react"
+import { useRef } from "react"
 import html2canvas from "html2canvas"
-import * as gtag from "@/lib/gtag"
+// Note: You need to install html2canvas: npm install html2canvas @types/html2canvas
 
 interface ResultPageProps {
   duckType: {
@@ -15,7 +15,7 @@ interface ResultPageProps {
     compatible: string[]
     incompatible: string[]
   }
-  username?: string
+  username?: string // optional로 변경
   onRestart: () => void
   onViewAllTypes: () => void
 }
@@ -37,7 +37,7 @@ const duckImages: { [key: string]: string } = {
   혹부리오리: "/images/ducks/혹부리오리.png",
   황오리: "/images/ducks/황오리.png",
   흰등오리: "/images/ducks/흰등오리.png",
-  흰뺨검둥오리: "/images/ducks/흰뺨오리.png",
+  흰뺨검둥오리: "/images/ducks/흰뺨검둥오리.png",
   흰뺨오리: "/images/ducks/흰뺨오리.png",
   흰죽지: "/images/ducks/흰죽지.png",
   넓적부리: "/images/ducks/넓적부리.png",
@@ -66,6 +66,20 @@ const duckTypes = {
   넓적부리: { name: "넓적부리", tags: ["여유", "평화형"] },
 }
 
+const compatibilityDescriptions = {
+  가창오리: {
+    compatible: {
+      홍머리오리: "솔직한 홍머리오리가 가창오리의 진심을 끌어내줘요",
+      청둥오리: "유연한 청둥오리가 가창오리의 신중함을 이해해줘요",
+    },
+    incompatible: {
+      쇠오리: "적극적인 쇠오리가 가창오리에게는 부담스러울 수 있어요",
+      발구지: "즉흥적인 발구지와는 속도 차이가 날 수 있어요",
+    },
+  },
+  // ... 다른 유형들도 추가
+}
+
 const duckSummaries = {
   가창오리: "조용히 관찰하며 신중하게 행동하는 깊이 있는 사색가",
   고방오리: "체계적인 계획으로 모든 일을 완벽하게 처리하는 전략가",
@@ -91,25 +105,159 @@ const duckSummaries = {
 
 export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: ResultPageProps) {
   const resultCardRef = useRef<HTMLDivElement>(null)
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+
+  const handleSaveImage = async () => {
+    try {
+      if (!resultCardRef.current) {
+        console.error("Result card ref not available")
+        return
+      }
+
+      // Function to convert image to base64 data URL
+      const imageToDataURL = async (imgElement: HTMLImageElement): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const canvas = document.createElement("canvas")
+          const ctx = canvas.getContext("2d")
+
+          if (!ctx) {
+            reject(new Error("Canvas context not available"))
+            return
+          }
+
+          const img = new Image()
+          img.crossOrigin = "anonymous"
+
+          img.onload = () => {
+            canvas.width = img.naturalWidth || img.width
+            canvas.height = img.naturalHeight || img.height
+            ctx.drawImage(img, 0, 0)
+
+            try {
+              const dataURL = canvas.toDataURL("image/png")
+              resolve(dataURL)
+            } catch (error) {
+              // Fallback: create a placeholder data URL
+              canvas.width = 200
+              canvas.height = 200
+              ctx.fillStyle = "#779966"
+              ctx.fillRect(0, 0, 200, 200)
+              ctx.fillStyle = "#ffffff"
+              ctx.font = "48px Arial"
+              ctx.textAlign = "center"
+              ctx.fillText("🦆", 100, 120)
+              resolve(canvas.toDataURL("image/png"))
+            }
+          }
+
+          img.onerror = () => {
+            // Create fallback placeholder
+            canvas.width = 200
+            canvas.height = 200
+            ctx.fillStyle = "#779966"
+            ctx.fillRect(0, 0, 200, 200)
+            ctx.fillStyle = "#ffffff"
+            ctx.font = "48px Arial"
+            ctx.textAlign = "center"
+            ctx.fillText("🦆", 100, 120)
+            resolve(canvas.toDataURL("image/png"))
+          }
+
+          img.src = imgElement.src
+        })
+      }
+
+      // Get all images in the result card
+      const images = resultCardRef.current.querySelectorAll("img")
+      const imageDataMap = new Map<string, string>()
+
+      // Convert all images to data URLs
+      for (const img of Array.from(images)) {
+        try {
+          const dataURL = await imageToDataURL(img as HTMLImageElement)
+          imageDataMap.set(img.src, dataURL)
+        } catch (error) {
+          console.warn("Failed to convert image to data URL:", img.src, error)
+        }
+      }
+
+      // Temporarily replace image sources with data URLs
+      const originalSources: { element: HTMLImageElement; originalSrc: string }[] = []
+
+      images.forEach((img) => {
+        const htmlImg = img as HTMLImageElement
+        originalSources.push({ element: htmlImg, originalSrc: htmlImg.src })
+
+        const dataURL = imageDataMap.get(htmlImg.src)
+        if (dataURL) {
+          htmlImg.src = dataURL
+        }
+      })
+
+      // Wait a moment for the DOM to update
+      await new Promise((resolve) => setTimeout(resolve, 200))
+
+      // Capture with html2canvas with enhanced settings
+      const canvas = await html2canvas(resultCardRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        foreignObjectRendering: true,
+        logging: false,
+        width: resultCardRef.current.scrollWidth,
+        height: resultCardRef.current.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: resultCardRef.current.scrollWidth,
+        windowHeight: resultCardRef.current.scrollHeight,
+        onclone: (clonedDoc) => {
+          // Ensure all images in the cloned document use data URLs
+          const clonedImages = clonedDoc.querySelectorAll("img")
+          clonedImages.forEach((clonedImg) => {
+            const htmlClonedImg = clonedImg as HTMLImageElement
+            const dataURL = imageDataMap.get(htmlClonedImg.src)
+            if (dataURL) {
+              htmlClonedImg.src = dataURL
+            }
+          })
+        },
+      })
+
+      // Restore original image sources
+      originalSources.forEach(({ element, originalSrc }) => {
+        element.src = originalSrc
+      })
+
+      // Convert canvas to blob and download
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.download = `${username || "나"}_${duckType.name}_결과.png`
+            link.href = url
+            link.click()
+            URL.revokeObjectURL(url)
+          }
+        },
+        "image/png",
+        1.0,
+      )
+    } catch (error) {
+      console.error("이미지 저장 실패:", error)
+      alert("이미지 저장에 실패했습니다. 다시 시도해주세요.")
+    }
+  }
 
   const handleShare = async () => {
-    // Track share action
-    gtag.event({
-      action: "share_result",
-      category: "social",
-      label: duckType.name,
-    })
-
-    const resultText = `🦆 나는 ${duckType.name}!\n\n${duckType.tags.map((tag) => `#${tag}`).join(" ")}\n\n${username || "나"}의 꽥 테스트 결과를 확인해보세요!`
-    const testUrl = window.location.origin
+    const text = `나는 ${duckType.name}! 내 안의 꽥 테스트 결과: ${duckType.tags.join(", ")}`
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: `나는 ${duckType.name}!`,
-          text: resultText,
-          url: testUrl,
+          text: text,
+          url: window.location.href,
         })
       } catch (error) {
         console.error("공유 실패:", error)
@@ -117,354 +265,10 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
     } else {
       // 클립보드에 복사
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(`${resultText}\n\n테스트 해보기: ${testUrl}`)
+        await navigator.clipboard.writeText(text + " " + window.location.href)
         alert("결과가 클립보드에 복사되었습니다!")
       }
     }
-  }
-
-  const preloadImages = async (): Promise<void> => {
-    const imageUrls = [
-      duckImages[duckType.name],
-      ...duckType.compatible.slice(0, 2).map((type) => duckImages[type]),
-      ...duckType.incompatible.slice(0, 2).map((type) => duckImages[type]),
-    ].filter(Boolean)
-
-    const imagePromises = imageUrls.map((url) => {
-      return new Promise<void>((resolve, reject) => {
-        const img = new Image()
-        img.crossOrigin = "anonymous"
-        img.onload = () => resolve()
-        img.onerror = () => {
-          console.warn(`Failed to preload image: ${url}`)
-          resolve() // Continue even if some images fail
-        }
-        img.src = url
-      })
-    })
-
-    await Promise.all(imagePromises)
-  }
-
-  const handleSaveImage = async () => {
-    if (isGeneratingImage) return
-
-    setIsGeneratingImage(true)
-
-    try {
-      // Track image save action
-      gtag.event({
-        action: "save_image",
-        category: "engagement",
-        label: duckType.name,
-      })
-
-      const element = resultCardRef.current
-      if (!element) {
-        throw new Error("결과 카드 요소를 찾을 수 없습니다.")
-      }
-
-      // Preload all images first
-      await preloadImages()
-
-      // Wait for any pending renders and font loading
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Store original styles
-      const originalStyle = element.style.cssText
-      const originalTransform = element.style.transform
-      const originalPosition = element.style.position
-
-      // Apply enhanced styles for better capture
-      element.style.transform = "none"
-      element.style.position = "relative"
-      element.style.zIndex = "9999"
-      element.style.backgroundColor = "rgba(255, 255, 255, 0.95)"
-      element.style.minHeight = "auto"
-      element.style.width = "400px"
-      element.style.maxWidth = "400px"
-      element.style.margin = "0 auto"
-
-      // Force layout recalculation
-      element.offsetHeight
-
-      // Enhanced canvas options for better quality and compatibility
-      const canvas = await html2canvas(element, {
-        backgroundColor: "#749665",
-        scale: window.devicePixelRatio || 2,
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-        width: 400,
-        height: element.scrollHeight,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 400,
-        windowHeight: element.scrollHeight,
-        foreignObjectRendering: true,
-        removeContainer: true,
-        onclone: (clonedDoc, clonedElement) => {
-          // Enhanced font loading and styling for cloned document
-          const style = clonedDoc.createElement("style")
-          style.textContent = `
-          @font-face {
-            font-family: "MoneyGraphy";
-            src: url("${window.location.origin}/fonts/Moneygraphy-Rounded.ttf") format("truetype");
-            font-display: block;
-          }
-          @font-face {
-            font-family: "TmoneyRoundWind";
-            src: url("${window.location.origin}/fonts/TmoneyRoundWindRegular.ttf") format("truetype");
-            font-display: block;
-          }
-          
-          * {
-            font-family: "MoneyGraphy", "TmoneyRoundWind", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
-            -webkit-font-smoothing: antialiased !important;
-            -moz-osx-font-smoothing: grayscale !important;
-            box-sizing: border-box !important;
-          }
-          
-          /* Enhanced centering for all circular elements */
-          .w-10.h-10, .w-12.h-12, .w-16.h-16 {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            position: relative !important;
-          }
-          
-          .w-10.h-10 span, .w-12.h-12 span, .w-16.h-16 span {
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            line-height: 1 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 100% !important;
-            height: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            text-align: center !important;
-            font-weight: bold !important;
-          }
-          
-          /* Enhanced tag styling */
-          .rounded-full.inline-flex {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
-          }
-          
-          .rounded-full.inline-flex span {
-            position: static !important;
-            transform: none !important;
-            line-height: 1.2 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-          }
-          
-          /* Image centering and sizing */
-          img {
-            display: block !important;
-            margin: 0 auto !important;
-            max-width: 100% !important;
-            height: auto !important;
-          }
-          
-          /* Container centering */
-          .text-center {
-            text-align: center !important;
-          }
-          
-          .flex.justify-center {
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-          }
-          
-          .flex.items-center {
-            display: flex !important;
-            align-items: center !important;
-          }
-          
-          /* Background and layout fixes */
-          .bg-white\\/80 {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-          }
-          
-          .backdrop-blur-sm {
-            backdrop-filter: none !important;
-          }
-          
-          /* Ensure proper spacing */
-          .mb-6 { margin-bottom: 1.5rem !important; }
-          .mb-4 { margin-bottom: 1rem !important; }
-          .mb-3 { margin-bottom: 0.75rem !important; }
-          .mb-2 { margin-bottom: 0.5rem !important; }
-          .mb-10 { margin-bottom: 2.5rem !important; }
-          
-          /* Fix flex layouts */
-          .flex.flex-col {
-            display: flex !important;
-            flex-direction: column !important;
-          }
-          
-          .flex.gap-2 {
-            display: flex !important;
-            gap: 0.5rem !important;
-          }
-          
-          .flex.gap-4 {
-            display: flex !important;
-            gap: 1rem !important;
-          }
-          
-          /* Ensure text wrapping */
-          .flex-wrap {
-            flex-wrap: wrap !important;
-          }
-          
-          /* Duck image specific styling */
-          .duck-main-image {
-            transform: scale(1.2) !important;
-            transform-origin: center center !important;
-          }
-        `
-          clonedDoc.head.appendChild(style)
-
-          // Fix all image sources in cloned document
-          const images = clonedDoc.querySelectorAll("img")
-          images.forEach((img) => {
-            if (img.src.startsWith("/")) {
-              img.src = window.location.origin + img.src
-            }
-            img.crossOrigin = "anonymous"
-          
-            // Ensure duck image has proper scaling
-            if (img.alt && img.alt.includes("오리")) {
-              img.style.transform = "scale(1.2)"
-              img.style.transformOrigin = "center center"
-            }
-          })
-
-          // Force all text elements to be properly centered
-          const textElements = clonedDoc.querySelectorAll(".w-10, .w-12, .w-16")
-          textElements.forEach((el) => {
-            const span = el.querySelector("span")
-            if (span) {
-              span.style.position = "absolute"
-              span.style.top = "50%"
-              span.style.left = "50%"
-              span.style.transform = "translate(-50%, -50%)"
-              span.style.display = "flex"
-              span.style.alignItems = "center"
-              span.style.justifyContent = "center"
-              span.style.width = "100%"
-              span.style.height = "100%"
-              span.style.textAlign = "center"
-              span.style.lineHeight = "1"
-            }
-          })
-
-          // Ensure all flex containers are properly centered
-          const flexContainers = clonedDoc.querySelectorAll(".flex")
-          flexContainers.forEach((el) => {
-            if (el.classList.contains("justify-center")) {
-              el.style.display = "flex"
-              el.style.justifyContent = "center"
-              el.style.alignItems = "center"
-            }
-          })
-        },
-      })
-
-      // Restore original styles
-      element.style.cssText = originalStyle
-      element.style.transform = originalTransform
-      element.style.position = originalPosition
-
-      // Validate canvas
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error("캔버스 생성에 실패했습니다.")
-      }
-
-      // Create a new canvas with proper dimensions and background
-      const finalCanvas = document.createElement("canvas")
-      const finalCtx = finalCanvas.getContext("2d")
-    
-      if (!finalCtx) {
-        throw new Error("최종 캔버스 컨텍스트를 생성할 수 없습니다.")
-      }
-
-      // Set final canvas dimensions with padding
-      const padding = 40
-      finalCanvas.width = canvas.width + (padding * 2)
-      finalCanvas.height = canvas.height + (padding * 2)
-
-      // Draw background
-      const gradient = finalCtx.createLinearGradient(0, 0, 0, finalCanvas.height)
-      gradient.addColorStop(0, "#749665")
-      gradient.addColorStop(1, "#5a7a4d")
-      finalCtx.fillStyle = gradient
-      finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height)
-
-      // Draw the captured content centered
-      finalCtx.drawImage(canvas, padding, padding)
-
-      // Convert to blob with high quality
-      const blob = await new Promise<Blob | null>((resolve) => {
-        finalCanvas.toBlob(resolve, "image/png", 1.0)
-      })
-
-      if (!blob) {
-        throw new Error("이미지 변환에 실패했습니다.")
-      }
-
-      // Create download link
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.download = `${duckType.name}_결과_${new Date().getTime()}.png`
-      link.href = url
-      link.style.display = "none"
-
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      // Clean up
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-
-      // Show success message
-      alert("이미지가 성공적으로 저장되었습니다!")
-    } catch (error) {
-      console.error("이미지 저장 실패:", error)
-
-      // Track error
-      gtag.event({
-        action: "save_image_error",
-        category: "error",
-        label: error instanceof Error ? error.message : "Unknown error",
-      })
-
-      // Show user-friendly error message
-      const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다."
-      alert(`이미지 저장에 실패했습니다: ${errorMessage}\n\n다시 시도해주세요.`)
-    } finally {
-      setIsGeneratingImage(false)
-    }
-  }
-
-  const handlePreorderClick = () => {
-    // Track preorder button click
-    gtag.event({
-      action: "click_preorder_result",
-      category: "conversion",
-      label: "preorder_from_result",
-    })
   }
 
   return (
@@ -485,26 +289,16 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
         </div>
 
         {/* Main Card */}
-        <div
-          ref={resultCardRef}
-          data-result-card
-          className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg relative mx-0 image-capture-card"
-          style={{
-            minWidth: "320px",
-            maxWidth: "480px",
-            margin: "0 auto",
-          }}
-        >
+        <div ref={resultCardRef} className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
           {/* Title */}
-          <div className="text-center my-0 mb-[50px]">
+          <div className="text-center mb-4">
             <h2 className="text-lg font-bold text-gray-700 mb-2">{username || "당신"}의 꽥은</h2>
             <h1 className="text-4xl font-bold text-gray-800 mb-3">{duckType.name}</h1>
             <div className="flex justify-center gap-2 mb-4">
               {duckType.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-black inline-flex items-center justify-center"
-                  style={{ lineHeight: "1.2" }}
+                  className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-black"
                 >
                   #{tag}
                 </span>
@@ -512,22 +306,14 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </div>
           </div>
 
-          {/* Duck Character - Full width prominent display with dynamic scaling */}
+          {/* Duck Character - Full width prominent display */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-4 w-full flex justify-center">
-              <div
-                className="flex items-center justify-center my-10 mb-[60px] w-6/12 h-fit"
-                style={{ transform: "scale(2)" }}
-              >
+              <div className="max-w-xs h-64 flex items-center justify-center my-[-52px] w-full">
                 <img
                   src={duckImages[duckType.name] || "/placeholder.svg?height=200&width=200&text=Duck"}
                   alt={duckType.name}
-                  className="w-48 h-48 object-contain transition-transform duration-300 hover:scale-110"
-                  style={{
-                    transform: "scale(1.2)",
-                    transformOrigin: "center center",
-                  }}
-                  crossOrigin="anonymous"
+                  className="w-full h-full object-contain max-w-[200px] max-h-[200px]"
                   onError={(e) => {
                     console.warn("Failed to load duck image in UI:", duckImages[duckType.name])
                     e.currentTarget.src = "/placeholder.svg?height=200&width=200&text=🦆"
@@ -539,20 +325,16 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             {/* Personality circles */}
             <div className="flex justify-center gap-2">
               <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white text-lg font-bold leading-none flex items-center justify-center h-full w-full">
-                  성
-                </span>
+                <span className="text-white text-lg font-bold">성</span>
               </div>
               <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white text-lg font-bold leading-none flex items-center justify-center h-full w-full">
-                  격
-                </span>
+                <span className="text-white text-lg font-bold">격</span>
               </div>
             </div>
           </div>
 
           {/* Description with highlighted keywords */}
-          <div className="text-center text-gray-700 text-sm leading-relaxed mb-10">
+          <div className="text-center text-gray-700 text-sm leading-relaxed mb-6">
             {duckType.description
               .split(" ")
               .map((word, index) => {
@@ -573,89 +355,55 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
               .reduce((prev, curr, index) => [prev, " ", curr])}
           </div>
 
-          {/* My charm section - Two line layout with fixed text alignment */}
+          {/* My charm section */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  나
-                </span>
+                <span className="text-white font-bold text-base">나</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  의
-                </span>
+                <span className="text-white font-bold text-base">의</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  매
-                </span>
+                <span className="text-white font-bold text-base">매</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  력
-                </span>
+                <span className="text-white font-bold text-base">력</span>
               </div>
             </div>
-            {/* Two-line layout for keywords */}
-            <div className="flex flex-col items-center gap-2 my-0 mb-10">
-              {/* First line - 3 keywords */}
-              <div className="flex justify-center gap-2">
-                {duckType.strengths.slice(0, 3).map((strength, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border inline-flex items-center justify-center"
-                    style={{ lineHeight: "1.2" }}
-                  >
-                    {strength}
-                  </span>
-                ))}
-              </div>
-              {/* Second line - 2 keywords */}
-              <div className="flex justify-center gap-2">
-                {duckType.strengths.slice(3, 5).map((strength, index) => (
-                  <span
-                    key={index + 3}
-                    className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border inline-flex items-center justify-center"
-                    style={{ lineHeight: "1.2" }}
-                  >
-                    {strength}
-                  </span>
-                ))}
-              </div>
+            <div className="flex flex-wrap justify-center gap-2 flex-row items-start py-[px] my-0 mb-0">
+              {duckType.strengths.slice(0, 5).map((strength, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
+                >
+                  {strength}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Caution section with fixed text alignment */}
+          {/* Caution section */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white text-base font-black leading-none flex items-center justify-center h-full w-full">
-                  조
-                </span>
+                <span className="text-white text-base font-black">조</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  심
-                </span>
+                <span className="text-white font-bold text-base">심</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  할
-                </span>
+                <span className="text-white font-bold text-base">할</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  것
-                </span>
+                <span className="text-white font-bold text-base">것</span>
               </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-2 mb-10">
+            <div className="flex flex-wrap justify-center gap-2">
               {duckType.weaknesses.slice(0, 5).map((weakness, index) => (
                 <span
                   key={index}
-                  className="bg-red-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border inline-flex items-center justify-center"
-                  style={{ lineHeight: "1.2" }}
+                  className="bg-red-400/60 text-black px-3 py-1 rounded-full text-sm font-medium border-black border"
                 >
                   {weakness}
                 </span>
@@ -663,31 +411,23 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </div>
           </div>
 
-          {/* Compatible section with fixed text alignment */}
+          {/* Compatible section */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  찰
-                </span>
+                <span className="text-white font-bold text-base">찰</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  떡
-                </span>
+                <span className="text-white font-bold text-base">떡</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  궁
-                </span>
+                <span className="text-white font-bold text-base">궁</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  합
-                </span>
+                <span className="text-white font-bold text-base">합</span>
               </div>
             </div>
-            <div className="flex justify-center items-start gap-4 mb-10">
+            <div className="flex justify-center items-start gap-4">
               {duckType.compatible.slice(0, 2).map((compatibleType, index) => (
                 <div key={index} className="text-center flex flex-col items-center max-w-[140px]">
                   <div className="bg-blue-200/50 rounded-full border-blue-400 flex items-center justify-center mb-2 border-2 size-auto w-16 h-16">
@@ -695,7 +435,6 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                       src={duckImages[compatibleType] || "/placeholder.svg?height=48&width=48&text=🦆"}
                       alt={compatibleType}
                       className="w-12 h-12 object-contain"
-                      crossOrigin="anonymous"
                       onError={(e) => {
                         e.currentTarget.src = "/placeholder.svg?height=48&width=48&text=🦆"
                       }}
@@ -706,8 +445,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                     {duckTypes[compatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
-                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black inline-flex items-center justify-center"
-                        style={{ lineHeight: "1.2" }}
+                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black"
                       >
                         #{tag}
                       </span>
@@ -721,31 +459,20 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </div>
           </div>
 
-          {/* Incompatible section with fixed text alignment */}
+          {/* Incompatible section */}
           <div className="mb-6">
             <div className="flex justify-center gap-1 mb-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  안
-                </span>
+                <span className="text-white font-bold text-base">안</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  맞
-                </span>
+                <span className="text-white font-bold text-base">맞</span>
               </div>
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  아
-                </span>
-              </div>
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center border border-white">
-                <span className="text-white font-bold text-base leading-none flex items-center justify-center h-full w-full">
-                  요
-                </span>
+                <span className="text-white font-bold text-base">아</span>
               </div>
             </div>
-            <div className="flex justify-center items-start gap-4 mb-10">
+            <div className="flex justify-center items-start gap-4">
               {duckType.incompatible.slice(0, 2).map((incompatibleType, index) => (
                 <div key={index} className="text-center flex flex-col items-center max-w-[140px]">
                   <div className="w-16 h-16 bg-red-200/50 rounded-full border-red-400 flex items-center justify-center mb-2 border-2">
@@ -753,7 +480,6 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                       src={duckImages[incompatibleType] || "/placeholder.svg?height=48&width=48&text=🦆"}
                       alt={incompatibleType}
                       className="w-12 h-12 object-contain"
-                      crossOrigin="anonymous"
                       onError={(e) => {
                         e.currentTarget.src = "/placeholder.svg?height=48&width=48&text=🦆"
                       }}
@@ -764,8 +490,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
                     {duckTypes[incompatibleType as keyof typeof duckTypes]?.tags.map((tag, tagIndex) => (
                       <span
                         key={tagIndex}
-                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black inline-flex items-center justify-center"
-                        style={{ lineHeight: "1.2" }}
+                        className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs border border-black"
                       >
                         #{tag}
                       </span>
@@ -781,7 +506,13 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
 
           {/* Buttons */}
           <div className="flex flex-col gap-4 mt-6">
-            
+            <Button
+              onClick={handleSaveImage}
+              className="w-full bg-[#779966] hover:bg-[#6a8659] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-center text-base"
+            >
+              <Download className="mr-2 size-5" />
+              이미지 저장하기
+            </Button>
 
             <Button
               onClick={onViewAllTypes}
@@ -800,10 +531,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             </Button>
 
             <Button
-              onClick={() => {
-                handlePreorderClick()
-                window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")
-              }}
+              onClick={() => window.open("https://forms.gle/9Y5PbUNNr4KujFtb7", "_blank")}
               className="w-full bg-[#9BB88A] hover:bg-[#86A276] text-white py-4 rounded-full font-bold shadow-lg border-2 border-white text-base"
             >
               오리의 꿈 사전예약 하러가기
@@ -812,7 +540,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             <Button
               onClick={onRestart}
               variant="ghost"
-              className="w-full py-4 rounded-full underline hover:bg-white/10 text-black text-sm font-extralight"
+              className="w-full py-4 rounded-full font-bold underline hover:bg-white/10 text-base text-black"
             >
               테스트 다시하기
             </Button>
