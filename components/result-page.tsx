@@ -4,6 +4,7 @@ import { ShareIcon, Eye, Download } from "lucide-react"
 import { useRef } from "react"
 import html2canvas from "html2canvas"
 // Note: You need to install html2canvas: npm install html2canvas @types/html2canvas
+import { trackImageSave, trackShare } from "@/lib/analytics"
 
 interface ResultPageProps {
   duckType: {
@@ -238,6 +239,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
             link.href = url
             link.click()
             URL.revokeObjectURL(url)
+            trackImageSave(duckType.name) // 이 줄 추가
           }
         },
         "image/png",
@@ -259,6 +261,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
           text: text,
           url: window.location.href,
         })
+        trackShare(duckType.name, "native_share") // 이 줄 추가
       } catch (error) {
         console.error("공유 실패:", error)
       }
@@ -266,6 +269,7 @@ export function ResultPage({ duckType, username, onRestart, onViewAllTypes }: Re
       // 클립보드에 복사
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(text + " " + window.location.href)
+        trackShare(duckType.name, "clipboard") // 이 줄 추가
         alert("결과가 클립보드에 복사되었습니다!")
       }
     }

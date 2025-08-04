@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import ResultPage from "@/components/result-page"
 import { ChevronLeft } from "lucide-react"
+import { trackTestStart, trackTestComplete, trackViewAllTypes, trackRestart, pageview } from "@/lib/analytics"
+import { GADebugger } from "@/components/ga-debug"
 
 // Duck personality types data (same as before)
 const duckTypes = {
@@ -172,7 +174,7 @@ const duckTypes = {
     name: "흰뺨검둥오리",
     tags: ["공감", "친절형"],
     description:
-      "흰뺨검둥오리는 따뜻한 마음을 가진 천사 같은 존재로, 누구에게든 친절하고 다정하게 대해줍니다. 상대방의 이야기를 진심으로 들어주고, '힘들었겠다'라며 공감해주는 능력이 뛰어나요. 친구가 힘들어하면 밤새 곁에 있어주고, 기뻐하면 함께 기뻐해주는 진정한 친구예요. 하지만 남을 위해 자신을 희생하는 경우가 많아서, 가끔 친구들이 '너도 좀 챙겨'라고 걱정해줍니다. '나는 괜찮아'라고 말하지만, 사실은 가장 따뜻한 위로가 필요한 사람이기도 해요.",
+      "흰뺨검둥오리는 따뜻한 마음을 가진 천사 같은 존재로, 누구에게든 친절하고 다정하게 대해줍니다. 상대방의 이야���를 진심으로 들어주고, '힘들었겠다'라며 공감해주는 능력이 뛰어나요. 친구가 힘들어하면 밤새 곁에 있어주고, 기뻐하면 함께 기뻐해주는 진정한 친구예요. 하지만 남을 위해 자신을 희생하는 경우가 많아서, 가끔 친구들이 '너도 좀 챙겨'라고 걱정해줍니다. '나는 괜찮아'라고 말하지만, 사실은 가장 따뜻한 위로가 필요한 사람이기도 해요.",
     strengths: ["경청", "공감", "친절", "배려", "다정함"],
     weaknesses: ["자기희생", "감정소진", "우울감", "자기표현 부족", "결단력 부족"],
     compatible: ["점무늬오리", "비오리"],
@@ -447,6 +449,11 @@ export default function Home() {
   const [showNicknameInput, setShowNicknameInput] = useState(false)
   const [selectedDuckDetail, setSelectedDuckDetail] = useState<string | null>(null)
 
+  // 페이지 로드 시 GA 페이지뷰 추적
+  useEffect(() => {
+    pageview(window.location.pathname)
+  }, [])
+
   const handleAnswer = (answerType: string) => {
     const newAnswers = [...answers, answerType]
     setAnswers(newAnswers)
@@ -456,12 +463,15 @@ export default function Home() {
     } else {
       // 마지막 질문 완료 - 바로 결과 페이지로 이동
       setTimeout(() => {
+        const result = getResult()
+        trackTestComplete(result.name, username)
         setShowResult(true)
       }, 500) // 약간의 딜레이 후 결과 표시
     }
   }
 
   const handleRestart = () => {
+    trackRestart()
     setCurrentQuestion(0)
     setAnswers([])
     setShowResult(false)
@@ -475,12 +485,14 @@ export default function Home() {
 
   const handleNicknameSubmit = () => {
     if (username.trim()) {
+      trackTestStart(username)
       setTestStarted(true)
       setShowNicknameInput(false)
     }
   }
 
   const handleViewAllTypes = () => {
+    trackViewAllTypes()
     setShowAllTypes(true)
   }
 
@@ -816,6 +828,9 @@ export default function Home() {
         backgroundRepeat: "no-repeat",
       }}
     >
+      {/* GA 디버거 추가 */}
+      <GADebugger />
+
       <div className="flex flex-col items-center justify-start min-h-screen px-4 py-8">
         {/* Header with logo */}
         <div className="text-center mb-4">
@@ -856,8 +871,6 @@ export default function Home() {
           >
             내 안의 꽥 찾으러 가기
           </button>
-
-          
         </div>
       </div>
     </div>
