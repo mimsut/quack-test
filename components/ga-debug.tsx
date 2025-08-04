@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
 import { getGAStatus, sendTestEvent } from "@/lib/analytics"
 
 export function GADebugger() {
@@ -69,69 +68,8 @@ export function GADebugger() {
   }
 
   if (!isVisible) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        
-      </div>
-    )
+    return null
   }
 
-  return (
-    <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border max-w-sm z-50">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="font-bold text-sm">GA4 디버거 v2</h3>
-        <Button onClick={() => setIsVisible(false)} size="sm" variant="ghost" className="p-1 h-6 w-6">
-          ✕
-        </Button>
-      </div>
-
-      <div className="text-xs space-y-1 mb-3">
-        <div>측정 ID: G-LN3TR1CKGS</div>
-        <div>체크 시도: {loadingAttempts}회</div>
-        {gaStatus && (
-          <>
-            <div>gtag: {gaStatus.gtag}</div>
-            <div>DataLayer: {gaStatus.dataLayer}</div>
-            <div className={`font-bold ${gaStatus.overall === "정상" ? "text-green-600" : "text-red-600"}`}>
-              상태: {gaStatus.overall}
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Button onClick={handleTestEvent} size="sm" className="w-full text-xs">
-          테스트 이벤트 전송
-        </Button>
-
-        <Button onClick={handleCheckDataLayer} size="sm" variant="outline" className="w-full text-xs bg-transparent">
-          디버그 정보 출력
-        </Button>
-
-        <Button onClick={handleForceReload} size="sm" variant="outline" className="w-full text-xs bg-red-50">
-          페이지 새로고침
-        </Button>
-
-        <Button onClick={handleCheckRealtime} size="sm" variant="outline" className="w-full text-xs bg-transparent">
-          실시간 보고서 확인
-        </Button>
-      </div>
-
-      {testResults.length > 0 && (
-        <div className="text-xs bg-gray-100 p-2 rounded mt-2 max-h-20 overflow-y-auto">
-          {testResults.slice(-3).map((result, index) => (
-            <div key={index} className="truncate">
-              {result}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="text-xs text-gray-500 mt-2">
-        Next.js Script 컴포넌트 사용
-        <br />
-        로딩 안되면 새로고침 시도
-      </div>
-    </div>
-  )
+  return null // UI에서 완전히 제거, 백그라운드에서만 동작
 }
